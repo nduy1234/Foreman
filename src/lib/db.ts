@@ -1,0 +1,103 @@
+import { migrationRunner, sql } from '@forge/sql';
+
+/**
+ * Forge SQL schema. Migrations are append-only: never edit a shipped entry, add a new one.
+ * Run on install/upgrade lifecycle events and lazily before first use.
+ */
+export const MIGRATIONS: [name: string, ddl: string][] = [
+  [
+    'v001_audit_log',
+    `CREATE TABLE IF NOT EXISTS audit_log (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      ts DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      actor_account_id VARCHAR(128) NULL,
+      actor_kind VARCHAR(16) NOT NULL,
+      action VARCHAR(64) NOT NULL,
+      target VARCHAR(255) NULL,
+      proposal_id BIGINT NULL,
+      before_json JSON NULL,
+      after_json JSON NULL,
+      INDEX idx_audit_target (target),
+      INDEX idx_audit_ts (ts)
+    )`,
+  ],
+  [
+    'v002_jobs',
+    `CREATE TABLE IF NOT EXISTS jobs (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      kind VARCHAR(32) NOT NULL,
+      state VARCHAR(16) NOT NULL,
+      progress INT NOT NULL DEFAULT 0,
+      message VARCHAR(255) NULL,
+      input_json JSON NULL,
+      result_json JSON NULL,
+      error TEXT NULL,
+      created_by VARCHAR(128) NULL,
+      created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+      INDEX idx_jobs_kind_state (kind, state)
+    )`,
+  ],
+  [
+    'v003_proposals',
+    `CREATE TABLE IF NOT EXISTS proposals (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      project_key VARCHAR(32) NOT NULL,
+      kind VARCHAR(32) NOT NULL,
+      target_key VARCHAR(64) NULL,
+      payload_json JSON NOT NULL,
+      why TEXT NOT NULL,
+      source VARCHAR(16) NOT NULL,
+      state VARCHAR(16) NOT NULL DEFAULT 'pending',
+      dedupe_key VARCHAR(191) NULL,
+      created_by VARCHAR(128) NULL,
+      created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      decided_by VARCHAR(128) NULL,
+      decided_at DATETIME(3) NULL,
+      result_json JSON NULL,
+      UNIQUE KEY uq_proposals_dedupe (dedupe_key),
+      INDEX idx_proposals_project_state (project_key, state)
+    )`,
+  ],
+];
+
+let schemaReady = false;
+
+export async function runMigrations(): Promise<string[]> {
+  let runner = migrationRunner;
+  for (const [name, ddl] of MIGRATIONS) runner = runner.enqueue(name, ddl);
+  const applied = await runner.run();
+  schemaReady = true;
+  return applied;
+}
+
+export async function ensureSchema(): Promise<void> {
+  if (schemaReady) return;
+  await runMigrations();
+}
+
+export async function query<T>(text: string, ...params: unknown[]): Promise<T[]> {
+  await ensureSchema();
+  const res = await sql.prepare<T>(text).bindParams(...params).execute();
+  return res.rows as T[];
+}
+
+export async function exec(text: string, ...params: unknown[]): Promise<{ insertId: number; affectedRows: number }> {
+  await ensureSchema();
+  const res = await sql.prepare<{ insertId: number; affectedRows: number }>(text).bindParams(...params).execute();
+  const rows = res.rows as unknown as { insertId: number; affectedRows: number };
+  return { insertId: Number(rows.insertId ?? 0), affectedRows: Number(rows.affectedRows ?? 0) };
+}
+
+/** JSON column helper: SQL JSON may come back as string or object depending on driver. */
+export function parseJson<T = unknown>(v: unknown): T | null {
+  if (v === null || v === undefined) return null;
+  if (typeof v === 'string') {
+    try {
+      return JSON.parse(v) as T;
+    } catch {
+      return null;
+    }
+  }
+  return v as T;
+}

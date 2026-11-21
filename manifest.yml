@@ -1,0 +1,126 @@
+app:
+  # Replaced by `forge register`.
+  id: ari:cloud:ecosystem::app/00000000-0000-0000-0000-000000000000
+  runtime:
+    name: nodejs24.x
+    memoryMB: 512
+    architecture: arm64
+
+modules:
+  jira:projectPage:
+    - key: command-center
+      title: Foreman Command Center
+      resource: command-center
+      resolver:
+        function: resolver-fn
+      layout: blank
+
+  jira:issuePanel:
+    - key: evidence-panel
+      title: Evidence & Code Review
+      icon: resource:ui-assets;icon.svg
+      resource: issue-panel
+      resolver:
+        function: resolver-fn
+      viewportSize: large
+
+  rovo:agent:
+    - key: foreman-agent
+      name: Foreman
+      description: Construction operations agent. Reviews plans against code rules, tracks permits and inspections, explains project risks, and drafts approvable proposals.
+      prompt: resource:agent-resources;foreman-prompt.txt
+      conversationStarters:
+        - What's blocking our framing inspection?
+        - Review sheet A-201 against egress rules
+        - Draft the approval packet for permit P-2
+      actions:
+        - get-project-risks
+
+  action:
+    - key: get-project-risks
+      name: Get project risks
+      function: get-project-risks-fn
+      actionVerb: GET
+      description: |
+        Returns the current risk picture for a Foreman construction project: risk scores per
+        permit and inspection, detected problems (out-of-sequence inspections, stuck permits,
+        expiring permits, aging RFIs, contradictions), and the plain-English reason for each.
+      inputs:
+        projectKey:
+          title: Jira project key
+          type: string
+          required: false
+          description: Key of the Jira project (for example FMD). Optional when invoked from inside a project or issue.
+
+  llm:
+    - key: foreman-llm
+      model:
+        - claude
+
+  sql:
+    - key: foreman-db
+      engine: mysql
+
+  consumer:
+    - key: jobs-consumer
+      queue: foreman-jobs
+      function: jobs-consumer-fn
+
+  scheduledTrigger:
+    - key: monitor-hourly
+      function: monitor-hourly-fn
+      interval: hour
+    - key: digest-daily
+      function: digest-daily-fn
+      interval: day
+
+  trigger:
+    - key: lifecycle-trigger
+      function: lifecycle-fn
+      events:
+        - avi:forge:installed:app
+        - avi:forge:upgraded:app
+    - key: issue-events-trigger
+      function: issue-events-fn
+      events:
+        - avi:jira:created:issue
+        - avi:jira:updated:issue
+      filter:
+        ignoreSelf: true
+
+  function:
+    - key: resolver-fn
+      handler: index.resolver
+    - key: jobs-consumer-fn
+      handler: index.jobsConsumer
+      timeoutSeconds: 900
+    - key: monitor-hourly-fn
+      handler: index.monitorHourly
+      timeoutSeconds: 300
+    - key: digest-daily-fn
+      handler: index.digestDaily
+      timeoutSeconds: 300
+    - key: lifecycle-fn
+      handler: index.lifecycle
+      timeoutSeconds: 120
+    - key: issue-events-fn
+      handler: index.issueEvents
+    - key: get-project-risks-fn
+      handler: index.getProjectRisks
+
+resources:
+  - key: command-center
+    path: static/ui/build/command-center
+  - key: issue-panel
+    path: static/ui/build/issue-panel
+  - key: ui-assets
+    path: static/assets
+  - key: agent-resources
+    path: resources/agent
+
+permissions:
+  scopes:
+    # Read issues for the monitor, issue panel, Rovo actions and issue event triggers.
+    - read:jira-work
+    # Forge hosted storage (KVS for config).
+    - storage:app

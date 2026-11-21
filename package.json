@@ -1,0 +1,32 @@
+{
+  "name": "foreman",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Foreman - AI operating layer for construction on Jira, Confluence, Rovo and Teamwork Graph",
+  "license": "MIT",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build:ui": "npm --prefix static/ui run build",
+    "lint": "forge lint",
+    "predeploy": "npm run typecheck && npm test && npm run build:ui",
+    "deploy": "forge deploy",
+    "forge": "forge"
+  },
+  "dependencies": {
+    "@forge/api": "^8.5.0",
+    "@forge/events": "^3.0.10",
+    "@forge/kvs": "^2.1.2",
+    "@forge/llm": "^1.0.10",
+    "@forge/resolver": "^2.0.2",
+    "@forge/sql": "^4.0.10",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@forge/cli": "^15.1.0",
+    "@types/node": "^24.19.2",
+    "node": "^24.22.3",
+    "typescript": "^5.9.3",
+    "vitest": "^5.1.1"
+  }
+}
