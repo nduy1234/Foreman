@@ -124,6 +124,13 @@ human-approved proposals.
 - Browser pane: clicks inside Custom UI iframes don't register under an emulated viewport;
   keep the pane at its native size when driving the app.
 
+### Multi-app (Prompt 4)
+- `app.compatibility`: Jira required, Confluence optional. Install into Confluence with
+  `npx forge install --product confluence ...`. Multi-app apps can only be listed on Marketplace
+  as paid apps (PLAN R13). Confluence calls go through `requestConfluence` asUser (v2 pages/spaces).
+- Inspection stage changes go through `src/services/issueStage.ts#setStage`; only inspector
+  sign-off (`reports.signOff`) may set `Passed`.
+
 ### Data model as built (Prompt 2)
 - Jira is the system of record: issue types Permit / Inspection / RFI / Punch Item / Code Finding,
   link types Blocks / Requires Prior Inspection / Governed By Permit, Forge fields Trade,
