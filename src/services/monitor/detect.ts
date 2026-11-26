@@ -30,6 +30,8 @@ export interface MonIssue {
   /** Keys this issue blocks (outward "blocks"). */
   blocks: string[];
   sheets: string[];
+  /** Permit conditions of approval (permits). */
+  conditions?: string[];
   latestReport?: { state: string; conflicts: number; version: number } | null;
 }
 

@@ -90,6 +90,7 @@ export async function buildSnapshot(projectKey: string, now = new Date()): Promi
       governedBy: links.find((l) => l.type.name === 'Governed By Permit' && l.outwardIssue)?.outwardIssue?.key ?? null,
       blocks: links.filter((l) => l.type.name === 'Blocks' && l.outwardIssue).map((l) => l.outwardIssue!.key),
       sheets: Array.isArray(p.sheets) ? (p.sheets as string[]) : [],
+      conditions: Array.isArray(p.conditions) ? (p.conditions as string[]) : [],
       latestReport: reportByIssue.get(i.key) ?? null,
     });
     notesByIssue[i.key] = (i.fields.comment?.comments ?? [])

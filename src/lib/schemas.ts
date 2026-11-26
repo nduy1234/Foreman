@@ -71,6 +71,7 @@ export const ProposalKind = z.enum([
   'transition',
   'publish_report',
   'approve_permit',
+  'approval_packet',
   'comment',
 ]);
 export type ProposalKind = z.infer<typeof ProposalKind>;

@@ -131,6 +131,15 @@ human-approved proposals.
 - Inspection stage changes go through `src/services/issueStage.ts#setStage`; only inspector
   sign-off (`reports.signOff`) may set `Passed`.
 
+### Rovo agent, actions, skills, MCP (Prompt 6)
+- Agent `foreman-agent` (prompt in `resources/agent/foreman-prompt.txt`), 6 actions in
+  `src/actions/index.ts`, 3 skills in `skills/*/SKILL.md`, one `rovo:mcp` module exposing the same
+  6 actions (external MCP clients need a site admin to enable it in Admin > Connected apps;
+  endpoint https://mcp.atlassian.com/forge/53d4112c-bcbe-4a7e-ade7-a44df94a6995).
+- Function keys max 23 characters. Action descriptions max 255.
+- Write actions only call `upsertProposal`; `approve-pending` requires `confirmed: true` and runs
+  `decideProposal` as the user. Proposal kinds add `publish_report` and `approval_packet`.
+
 ### Monitor (Prompt 5)
 - Pure detectors in `src/services/monitor/detect.ts` (8 checks, risk points, plain-English why,
   one proposal each). Config per project in KVS `monitor:config:<KEY>` (zod defaults).

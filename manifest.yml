@@ -87,33 +87,218 @@ modules:
   rovo:agent:
     - key: foreman-agent
       name: Foreman
-      description: Construction operations agent. Reviews plans against code rules,
-        tracks permits and inspections, explains project risks, and drafts
-        approvable proposals.
+      description: Construction operations agent. Explains what is blocking permits and
+        inspections, reviews plan sheets against code rules, drafts inspection reports and
+        approval packets, and proposes fixes for a human to approve.
+      icon: resource:ui-assets;icon.svg
       prompt: resource:agent-resources;foreman-prompt.txt
       conversationStarters:
         - What's blocking our framing inspection?
         - Review sheet A-201 against egress rules
         - Draft the approval packet for permit P-2
+        - What are the biggest risks on this project right now?
+      followUpPrompt: Suggest up to three short follow-up questions a construction project manager would ask next, based on the risks, findings or proposals just discussed.
       actions:
+        - review-plan-against-code
         - get-project-risks
+        - create-inspection-report
+        - propose-resolution
+        - request-approval
+        - approve-pending
+      skills:
+        - plan-code-review
+        - inspection-readiness
+        - approval-packet
+
+  rovo:skill:
+    - key: plan-code-review
+      source:
+        dir: skills/plan-code-review
+      dependencies:
+        tools:
+          - review-plan-against-code
+          - propose-resolution
+    - key: inspection-readiness
+      source:
+        dir: skills/inspection-readiness
+      dependencies:
+        tools:
+          - get-project-risks
+          - create-inspection-report
+          - propose-resolution
+    - key: approval-packet
+      source:
+        dir: skills/approval-packet
+      dependencies:
+        tools:
+          - request-approval
+          - get-project-risks
+          - approve-pending
+
+  rovo:mcp:
+    - key: foreman-mcp
+      name: Foreman Construction
+      tools:
+        - review-plan-against-code
+        - get-project-risks
+        - create-inspection-report
+        - propose-resolution
+        - request-approval
+        - approve-pending
 
   action:
-    - key: get-project-risks
-      name: Get project risks
-      function: get-project-risks-fn
+    - key: review-plan-against-code
+      name: Review plan against code
+      function: action-review-plan-fn
       actionVerb: GET
       description: >-
-        Returns risk scores and detected problems for a Foreman construction project
-        (out-of-sequence inspections, stuck or expiring permits, aging RFIs,
-        contradictions), each with a plain-English reason.
+        Checks a plan sheet (e.g. A-201) against Foreman's code rule pack (IBC 2021, ADA,
+        ACI 318) and returns findings with citations and verbatim evidence quotes. Optional
+        focus: egress, fire separation, accessibility, structural or permit.
       inputs:
+        sheetId:
+          title: Plan sheet
+          type: string
+          required: true
+          description: Sheet number, for example A-201, S-101 or FP-101.
+        focus:
+          title: Rule focus
+          type: string
+          required: false
+          description: One of egress, fire separation, accessibility, structural, permit, or all.
         projectKey:
           title: Jira project key
           type: string
           required: false
-          description: Key of the Jira project (for example FMD). Optional when invoked
-            from inside a project or issue.
+          description: Project key such as FMD. Optional when there is only one Foreman project.
+    - key: get-project-risks
+      name: Get project risks and blockers
+      function: get-project-risks-fn
+      actionVerb: GET
+      description: >-
+        Returns the project's risk score and open problems (out-of-sequence inspections,
+        stuck or expiring permits, aging RFIs, contradictions) with reasons. With a focus,
+        returns what blocks that permit, inspection or RFI.
+      inputs:
+        focus:
+          title: Work item
+          type: string
+          required: false
+          description: Key or name of a work item, e.g. FMD-9, "framing inspection" or "permit P-2".
+        projectKey:
+          title: Jira project key
+          type: string
+          required: false
+          description: Project key such as FMD. Optional when there is only one Foreman project.
+    - key: create-inspection-report
+      name: Create inspection report
+      function: action-create-report-fn
+      actionVerb: CREATE
+      description: >-
+        Drafts a verified inspection report from field notes, transcripts, photos and plan
+        sheets, and creates a proposal to publish it for inspector sign-off. Never passes
+        the inspection.
+      inputs:
+        inspection:
+          title: Inspection
+          type: string
+          required: true
+          description: Inspection key or name, e.g. FMD-6 or "rebar inspection".
+        projectKey:
+          title: Jira project key
+          type: string
+          required: false
+          description: Project key such as FMD.
+    - key: propose-resolution
+      name: Propose resolution
+      function: action-propose-fn
+      actionVerb: CREATE
+      description: >-
+        Creates an approvable proposal to reschedule, notify a contractor, escalate to the
+        city, or re-inspect a work item. Nothing changes until a human approves it.
+      inputs:
+        issue:
+          title: Work item
+          type: string
+          required: true
+          description: Key or name of the permit, inspection or RFI.
+        kind:
+          title: Proposal type
+          type: string
+          required: true
+          description: One of reschedule, notify, escalate, reinspect.
+        reason:
+          title: Reason
+          type: string
+          required: true
+          description: Short plain-English reason for the proposal.
+        newDate:
+          title: New date
+          type: string
+          required: false
+          description: For reschedule or reinspect, the new date as YYYY-MM-DD.
+        recipient:
+          title: Recipient
+          type: string
+          required: false
+          description: For notify or escalate, who should receive it (contractor, city, architect).
+        message:
+          title: Message
+          type: string
+          required: false
+          description: For notify or escalate, the message to send.
+        projectKey:
+          title: Jira project key
+          type: string
+          required: false
+          description: Project key such as FMD.
+    - key: request-approval
+      name: Request approval
+      function: action-approval-fn
+      actionVerb: CREATE
+      description: >-
+        Drafts an approval packet for a permit (conditions, inspections, findings, risks,
+        readiness) or a sign-off request for an inspection report, as a proposal for human
+        approval. Returns the packet text.
+      inputs:
+        target:
+          title: Permit or inspection
+          type: string
+          required: true
+          description: Key or name, e.g. "permit P-2", FMD-2 or "framing inspection".
+        note:
+          title: Note
+          type: string
+          required: false
+          description: Optional note for the approver.
+        projectKey:
+          title: Jira project key
+          type: string
+          required: false
+          description: Project key such as FMD.
+    - key: approve-pending
+      name: Approve pending proposal
+      function: action-approve-fn
+      actionVerb: UPDATE
+      description: >-
+        Approves and runs one pending Foreman proposal as the current user. Only use when the
+        user explicitly asks to approve a specific proposal number and has confirmed it.
+      inputs:
+        proposalId:
+          title: Proposal number
+          type: integer
+          required: true
+          description: The proposal number, e.g. 12.
+        confirmed:
+          title: User confirmed
+          type: boolean
+          required: true
+          description: True only if the user explicitly confirmed approving this proposal in this conversation.
+        note:
+          title: Note
+          type: string
+          required: false
+          description: Optional approval note.
 
   llm:
     - key: foreman-llm
@@ -169,6 +354,16 @@ modules:
       handler: index.issueEvents
     - key: get-project-risks-fn
       handler: index.getProjectRisks
+    - key: action-review-plan-fn
+      handler: index.reviewPlanAgainstCode
+    - key: action-create-report-fn
+      handler: index.createInspectionReport
+    - key: action-propose-fn
+      handler: index.proposeResolution
+    - key: action-approval-fn
+      handler: index.requestApproval
+    - key: action-approve-fn
+      handler: index.approvePending
 
 resources:
   - key: command-center

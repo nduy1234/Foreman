@@ -4,6 +4,7 @@ import { adf, jira, route } from '../lib/jira';
 import { enqueueJob } from '../lib/jobs';
 import { ProposalKind } from '../lib/schemas';
 import { setStage } from './issueStage';
+import { latestReport, publishReport } from './reports';
 
 /**
  * Approvable proposals. The monitor and the agent only ever create rows here; a human approves
@@ -132,7 +133,7 @@ const comment = (issueKey: string, ...lines: string[]) =>
   jira(route`/rest/api/3/issue/${issueKey}/comment`, { as: 'user', method: 'POST', body: { body: adf(...lines.filter(Boolean)) } });
 
 /** Execute an approved proposal as the approving user. Returns a short result summary. */
-async function execute(p: Proposal, approver: string): Promise<Record<string, unknown>> {
+async function execute(p: Proposal, approver: string, accountId: string | null): Promise<Record<string, unknown>> {
   const key = String(p.payload.issueKey ?? p.targetKey ?? '');
   if (!key) throw new Error('Proposal has no target work item');
   switch (p.kind) {
@@ -166,6 +167,24 @@ async function execute(p: Proposal, approver: string): Promise<Record<string, un
       await comment(key, `[Foreman] Re-inspection booked for ${to} (approved by ${approver}).`, p.payload.reason ? `Why: ${p.payload.reason}` : '');
       return { reinspectionOn: to };
     }
+    case 'publish_report': {
+      const r = await latestReport(key);
+      if (!r) throw new Error(`No draft report for ${key} yet. Generate one in the Field evidence tab first.`);
+      if (r.state !== 'draft' && r.state !== 'changes_requested') return { alreadyPublished: r.version, state: r.state };
+      try {
+        const out = await publishReport(r.id, accountId, { spaceId: null, skipConfluence: false });
+        return { publishedVersion: out.version, confluenceUrl: out.confluenceUrl };
+      } catch {
+        const out = await publishReport(r.id, accountId, { spaceId: null, skipConfluence: true });
+        return { publishedVersion: out.version, confluenceUrl: null, note: 'Published in Jira only (Confluence unavailable)' };
+      }
+    }
+    case 'approval_packet': {
+      const lines = Array.isArray(p.payload.lines) ? (p.payload.lines as string[]) : [];
+      await comment(key, `[Foreman] ${p.payload.packetTitle ?? 'Approval packet'} (approved for the record by ${approver})`, ...lines.slice(0, 80));
+      await jira(route`/rest/api/3/issue/${key}`, { as: 'user', method: 'PUT', body: { update: { labels: [{ add: 'foreman-packet-ready' }] } } });
+      return { packetPostedOn: key, readiness: p.payload.readiness ?? null };
+    }
     default:
       throw new Error(`Proposal kind ${p.kind} cannot be executed from the queue`);
   }
@@ -192,7 +211,7 @@ export async function decideProposal(id: number, decision: 'approve' | 'reject',
   if (!affectedRows) throw new Error('Proposal was decided by someone else');
   const me = await jira<{ displayName: string }>(route`/rest/api/3/myself`, { as: 'user' });
   try {
-    const result = await execute(p, me.displayName);
+    const result = await execute(p, me.displayName, accountId);
     await exec(`UPDATE proposals SET state = 'executed', result_json = ? WHERE id = ?`, JSON.stringify({ ...result, note }), id);
     await audit({ actorAccountId: accountId, actorKind: 'user', action: 'proposal.approved', target: p.targetKey, proposalId: id, before: { state: 'pending' }, after: { kind: p.kind, result, note } });
   } catch (err) {
