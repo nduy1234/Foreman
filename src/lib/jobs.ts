@@ -17,14 +17,14 @@ export interface Job {
 }
 
 /** Create a job row and enqueue it for the async consumer (≤900 s runtime). */
-export async function enqueueJob(kind: JobKind, input: Record<string, unknown>, createdBy: string | null): Promise<number> {
+export async function enqueueJob(kind: JobKind, input: Record<string, unknown>, createdBy: string | null, delayInSeconds?: number): Promise<number> {
   const { insertId } = await exec(
     `INSERT INTO jobs (kind, state, progress, input_json, created_by) VALUES (?, 'queued', 0, ?, ?)`,
     kind,
     JSON.stringify(input),
     createdBy,
   );
-  await queue.push({ body: { jobId: insertId, kind, input } });
+  await queue.push({ body: { jobId: insertId, kind, input }, ...(delayInSeconds ? { delayInSeconds } : {}) });
   return insertId;
 }
 

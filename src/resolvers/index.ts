@@ -1,5 +1,6 @@
 import Resolver from '@forge/resolver';
 import { registerEvidenceResolvers } from './evidence';
+import { registerMonitorResolvers } from './monitor';
 import { z } from 'zod';
 import { listAudit } from '../lib/audit';
 import { enqueueJob, getJob, latestJobForIssue } from '../lib/jobs';
@@ -197,5 +198,6 @@ resolver.define('findingAction', async (req) => {
 });
 
 registerEvidenceResolvers(resolver);
+registerMonitorResolvers(resolver);
 
 export const handler = resolver.getDefinitions();

@@ -131,6 +131,17 @@ human-approved proposals.
 - Inspection stage changes go through `src/services/issueStage.ts#setStage`; only inspector
   sign-off (`reports.signOff`) may set `Passed`.
 
+### Monitor (Prompt 5)
+- Pure detectors in `src/services/monitor/detect.ts` (8 checks, risk points, plain-English why,
+  one proposal each). Config per project in KVS `monitor:config:<KEY>` (zod defaults).
+- `runMonitor` persists `monitor_problems` (first/last seen, resolved), `risk_scores`, the
+  read-only risk field, `foreman-risk-*` / `foreman-flag-*` label diffs, and ONE
+  "[Foreman monitor]" comment per new problem. Proposals are upserted by `dedupe_key` =
+  problem key; resolved problems make pending proposals `obsolete`; rejected stays rejected.
+- Proposals execute only via `decideProposal` (approve, asUser), then queue a rescan.
+- Triggers: hourly scan, daily scan + digest (`digests` table), debounced rescan on issue
+  events (90 s). Monitored projects = KVS keys `project:<KEY>:meta`.
+
 ### Data model as built (Prompt 2)
 - Jira is the system of record: issue types Permit / Inspection / RFI / Punch Item / Code Finding,
   link types Blocks / Requires Prior Inspection / Governed By Permit, Forge fields Trade,

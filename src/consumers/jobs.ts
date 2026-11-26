@@ -4,6 +4,8 @@ import { updateJob } from '../lib/jobs';
 import { JobEventBody } from '../lib/schemas';
 import { runPlanReviewJob } from '../services/planReviewJob';
 import { runEvidenceReportJob } from '../services/evidenceReportJob';
+import { buildDigest, storeDigest } from '../services/monitor/digest';
+import { runMonitor } from '../services/monitor/run';
 
 type JobHandler = (
   input: Record<string, unknown>,
@@ -19,6 +21,18 @@ const handlers: Partial<Record<JobEventBody['kind'], JobHandler>> = {
   },
   plan_review: (input, progress, jobId) => runPlanReviewJob(jobId, input, progress),
   evidence_report: (input, progress, jobId) => runEvidenceReportJob(jobId, input, progress),
+  monitor_scan: async (input, progress) => {
+    const projectKey = String(input.projectKey);
+    await progress(10, 'Scanning project');
+    const r = await runMonitor(projectKey, String(input.reason ?? 'manual'));
+    if (input.digest) {
+      await progress(85, 'Writing daily digest');
+      await storeDigest(await buildDigest(projectKey));
+    }
+    const summary = { problems: r.problems.length, newProblems: r.newProblems, resolved: r.resolved, proposalsCreated: r.proposalsCreated, projectScore: r.project.score };
+    console.info(`monitor_scan ${projectKey}: ${JSON.stringify({ ...summary, detectors: r.problems.map((p) => `${p.detector}:${p.issueKey}`) })}`);
+    return summary;
+  },
 };
 
 export async function handler(event: AsyncEvent) {

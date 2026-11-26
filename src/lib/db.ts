@@ -148,6 +148,51 @@ export const MIGRATIONS: [name: string, ddl: string][] = [
       INDEX idx_reports_issue (issue_key)
     )`,
   ],
+  [
+    'v008_monitor_problems',
+    `CREATE TABLE IF NOT EXISTS monitor_problems (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      project_key VARCHAR(32) NOT NULL,
+      problem_key VARCHAR(191) NOT NULL,
+      detector VARCHAR(48) NOT NULL,
+      issue_key VARCHAR(64) NOT NULL,
+      severity VARCHAR(16) NOT NULL,
+      points INT NOT NULL,
+      title VARCHAR(500) NOT NULL,
+      why TEXT NOT NULL,
+      proposal_id BIGINT NULL,
+      first_seen DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      last_seen DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      resolved_at DATETIME(3) NULL,
+      commented_at DATETIME(3) NULL,
+      UNIQUE KEY uq_problem_key (problem_key),
+      INDEX idx_problems_project_open (project_key, resolved_at)
+    )`,
+  ],
+  [
+    'v009_risk_scores',
+    `CREATE TABLE IF NOT EXISTS risk_scores (
+      issue_key VARCHAR(64) PRIMARY KEY,
+      project_key VARCHAR(32) NOT NULL,
+      score INT NOT NULL,
+      band VARCHAR(8) NOT NULL,
+      reasons_json JSON NOT NULL,
+      computed_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      INDEX idx_risk_project (project_key)
+    )`,
+  ],
+  [
+    'v010_digests',
+    `CREATE TABLE IF NOT EXISTS digests (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      project_key VARCHAR(32) NOT NULL,
+      digest_date DATE NOT NULL,
+      body_json JSON NOT NULL,
+      text MEDIUMTEXT NOT NULL,
+      created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      UNIQUE KEY uq_digest_day (project_key, digest_date)
+    )`,
+  ],
 ];
 
 let schemaReady = false;

@@ -4,6 +4,7 @@ import { view } from '@forge/bridge';
 import { call, Status } from '@shared/api';
 import { DemoLoader } from '@shared/DemoLoader';
 import { Diagnostics } from '@shared/Diagnostics';
+import { Monitor } from '@shared/Monitor';
 import '@shared/base.css';
 
 view.theme.enable().catch(() => undefined);
@@ -19,7 +20,11 @@ function CommandCenter() {
         <h1>Foreman Command Center</h1>
         <p className="fm-muted">Permits, inspections, risks and approvals for this project.</p>
       </header>
-      <DemoLoader currentProjectKey={status?.projectKey ?? null} />
+      <Monitor notMonitored={<DemoLoader currentProjectKey={status?.projectKey ?? null} />} />
+      <details className="fm-details">
+        <summary>Demo project</summary>
+        <DemoLoader currentProjectKey={status?.projectKey ?? null} />
+      </details>
       <details className="fm-details">
         <summary>System check</summary>
         <Diagnostics embedded />
