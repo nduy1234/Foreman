@@ -142,6 +142,17 @@ human-approved proposals.
 - Forge CLI 15 refuses Node 25 (machine default). `node@24` and `@forge/cli` are
   devDependencies, so run the CLI as `npx forge <cmd>` or `npm run forge -- <cmd>` from the
   repo root — npm puts the local Node 24 first on PATH. Never call a global `forge`.
+  In PowerShell, plain `npx forge` picks up the system Node 25 and fails — use
+  `npm run forge -- <cmd>` there.
+- `forge tunnel`: run it in a real terminal tab and stop it with Ctrl+C. Killing the process
+  (TaskStop, Stop-Process) skips deregistration, and the site keeps routing Custom UI to
+  `localhost:8000` (blank skeleton) until a clean tunnel start/stop. The Claude browser pane
+  blocks site→localhost requests (`ERR_BLOCKED_BY_CLIENT`), so tunneled Custom UI can only be
+  checked in a normal browser; resolver/back-end changes still need a deploy to show in the pane.
+- Dev site: `daysworkspace-43877786.atlassian.net` (Jira; test project `KAN`, test item `KAN-1`).
+  App id `53d4112c-bcbe-4a7e-ade7-a44df94a6995`, development env
+  `0d4c8705-eb66-4c76-93e8-79a3efc0adb1`. Command Center URL:
+  `/jira/software/projects/<KEY>/apps/<appId>/<envId>`.
 - CLI usage analytics disabled (`forge settings set usage-analytics false`).
 - Custom UI: `static/ui` (Vite + React 18). `npm run build:ui` builds both bundles into
   `static/ui/build/<module>`. Vite config pins an empty PostCSS config because a stray
