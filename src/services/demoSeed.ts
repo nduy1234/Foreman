@@ -176,6 +176,7 @@ export function foremanProperty(i: BuiltIssue) {
       ? { contractor: partyName(i.assignment.contractor), assignedAt: i.assignmentAt, acknowledgedAt: i.assignment.acknowledged ? i.assignmentAt : null }
       : null,
     checklist: i.checklist ?? [],
+    conditions: i.conditions ?? [],
     sheets: i.sheets ?? [],
     demo: true,
   };
@@ -188,6 +189,7 @@ function descriptionFor(i: BuiltIssue): ReturnType<typeof adf> {
   if (i.dates.submittedOn) lines.push(`Submitted: ${i.dates.submittedOn}`);
   if (i.dates.expiresOn) lines.push(`Expires: ${i.dates.expiresOn}`);
   if (i.checklist?.length) lines.push(`Checklist: ${i.checklist.join('; ')}`);
+  if (i.conditions?.length) lines.push(`Conditions of approval: ${i.conditions.join(' ')}`);
   if (i.sheets?.length) lines.push(`Plan sheets: ${i.sheets.join(', ')}`);
   lines.push('', 'Sample data created by Foreman "Load demo project".');
   return adf(...lines);

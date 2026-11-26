@@ -4,6 +4,12 @@ app:
     name: nodejs24.x
     memoryMB: 512
     architecture: arm64
+  # Jira is required; Confluence is optional and only used to publish inspection reports.
+  compatibility:
+    jira:
+      required: true
+    confluence:
+      required: false
 
 modules:
   jira:projectPage:
@@ -188,6 +194,11 @@ permissions:
     - read:jira-user
     # Forge hosted storage (KVS for config and demo state).
     - storage:app
+    # Confluence (optional): find or create the report space, publish and update report pages.
+    - read:space:confluence
+    - write:space:confluence
+    - read:page:confluence
+    - write:page:confluence
   content:
     # Inline style attributes in Custom UI (progress bars, dynamic widths).
     styles:

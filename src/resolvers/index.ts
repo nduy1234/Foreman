@@ -1,4 +1,5 @@
 import Resolver from '@forge/resolver';
+import { registerEvidenceResolvers } from './evidence';
 import { z } from 'zod';
 import { listAudit } from '../lib/audit';
 import { enqueueJob, getJob, latestJobForIssue } from '../lib/jobs';
@@ -194,5 +195,7 @@ resolver.define('findingAction', async (req) => {
     return { ok: false as const, error: err instanceof Error ? err.message : String(err) };
   }
 });
+
+registerEvidenceResolvers(resolver);
 
 export const handler = resolver.getDefinitions();

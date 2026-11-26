@@ -122,6 +122,32 @@ export const MIGRATIONS: [name: string, ddl: string][] = [
       INDEX idx_findings_project (project_key, state)
     )`,
   ],
+  [
+    'v007_inspection_reports',
+    `CREATE TABLE IF NOT EXISTS inspection_reports (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      project_key VARCHAR(32) NOT NULL,
+      issue_key VARCHAR(64) NOT NULL,
+      version INT NOT NULL,
+      job_id BIGINT NULL,
+      state VARCHAR(24) NOT NULL DEFAULT 'draft',
+      report_json JSON NOT NULL,
+      verified_count INT NOT NULL DEFAULT 0,
+      needs_review_count INT NOT NULL DEFAULT 0,
+      conflict_count INT NOT NULL DEFAULT 0,
+      confluence_page_id VARCHAR(32) NULL,
+      confluence_url VARCHAR(512) NULL,
+      created_by VARCHAR(128) NULL,
+      created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      published_by VARCHAR(128) NULL,
+      published_at DATETIME(3) NULL,
+      signed_by VARCHAR(128) NULL,
+      signed_at DATETIME(3) NULL,
+      signoff_note VARCHAR(1000) NULL,
+      UNIQUE KEY uq_reports_issue_version (issue_key, version),
+      INDEX idx_reports_issue (issue_key)
+    )`,
+  ],
 ];
 
 let schemaReady = false;

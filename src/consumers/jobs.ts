@@ -3,6 +3,7 @@ import { audit } from '../lib/audit';
 import { updateJob } from '../lib/jobs';
 import { JobEventBody } from '../lib/schemas';
 import { runPlanReviewJob } from '../services/planReviewJob';
+import { runEvidenceReportJob } from '../services/evidenceReportJob';
 
 type JobHandler = (
   input: Record<string, unknown>,
@@ -17,6 +18,7 @@ const handlers: Partial<Record<JobEventBody['kind'], JobHandler>> = {
     return { pong: true, echo: input, at: new Date().toISOString() };
   },
   plan_review: (input, progress, jobId) => runPlanReviewJob(jobId, input, progress),
+  evidence_report: (input, progress, jobId) => runEvidenceReportJob(jobId, input, progress),
 };
 
 export async function handler(event: AsyncEvent) {

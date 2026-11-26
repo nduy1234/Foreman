@@ -113,6 +113,8 @@ export interface SeedIssue {
   openedDay?: number;
   assignment?: { contractor: string; assignedHoursAgo: number; acknowledged: boolean };
   checklist?: string[];
+  /** Permit conditions of approval (permits only). */
+  conditions?: string[];
   /** Plan sheets this item relates to. */
   sheets?: string[];
 }
@@ -126,12 +128,22 @@ export const ISSUES: SeedIssue[] = [
     description: 'Foundation and below-grade work: footings, grade beams, underground utilities stub-outs.',
     stage: 'Approved', trade: 'Concrete', level: 'Foundation', permitNo: 'BLD-2026-0412-F', jurisdiction: J,
     submittedDay: -60, approvedDay: -45, expiresDay: 14, sheets: ['S-101'],
+    conditions: [
+      'Special inspection of reinforcement placement required before each pour (S-101).',
+      'Reinforcement must match approved sheet S-101; field changes need engineer-of-record approval.',
+      'Bottom of footing must bear on native soil per geotechnical report GR-2026-14.',
+    ],
   },
   {
     seedId: 'P2', type: 'Permit', summary: 'P-2 Building permit (shell and core)',
     description: 'Podium slab, Type V-A wood framing Levels 2-5, building envelope, egress and life safety.',
     stage: 'Approved', trade: 'General', level: 'All levels', permitNo: 'BLD-2026-0413', jurisdiction: J,
     submittedDay: -55, approvedDay: -30, expiresDay: 180, sheets: ['A-201', 'S-101'],
+    conditions: [
+      'Hold-downs and shear wall nailing must be complete and visible at framing inspection.',
+      'Rated corridor wall assemblies must match A-201 note 7 (UL U419) before cover.',
+      'Deferred submittal: firestop systems must be approved before rough-in cover.',
+    ],
   },
   {
     seedId: 'P3', type: 'Permit', summary: 'P-3 MEP permit (mechanical, electrical, plumbing)',
