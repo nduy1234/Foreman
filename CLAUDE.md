@@ -106,6 +106,38 @@ human-approved proposals.
 - Default posture: **no `permissions.external.fetch`** → RoA eligible. Any vision/BYOK egress
   must be an opt-in, separate decision (breaks RoA and conflicts with TWG no-egress policy).
 
+### Jira REST gotchas (verified on the dev site)
+- Forge custom fields (`jira:customField`) do NOT appear in `GET /rest/api/3/field`; use the
+  paginated `GET /rest/api/3/field/search?type=custom` and match `schema.custom` ending in
+  `/static/<moduleKey>`. Field ids on dev: trade 10044, level 10047, permit no 10045,
+  jurisdiction 10048, risk 10046, stage 10049 (ids differ per site/env — always look up).
+- Forge field values are app-owned: write them with `POST /rest/api/3/app/field/value` **asApp**.
+- `POST /rest/api/3/project` rejects `projectTemplateKey` together with explicit schemes:
+  create from template, then `PUT /issuetypescheme/project` and `PUT /issuetypescreenscheme/project`.
+- JQL search is eventually consistent: issues created seconds ago may be missing. Map keys from
+  the bulk-create response and read single issues with `GET /issue/{key}` when it matters.
+- `POST /rest/api/3/issueLink`: `inwardIssue` gets the outward description
+  (`{inwardIssue: A, outwardIssue: B}` with "Blocks" = "A blocks B").
+- Jira admin setup (issue types, schemes, screens, project) only works **asUser** from resolvers;
+  consumers/triggers have no user. Resolvers must rethrow `NEEDS_AUTHENTICATION_ERR` so Forge
+  can show the "Allow access" consent screen.
+- Browser pane: clicks inside Custom UI iframes don't register under an emulated viewport;
+  keep the pane at its native size when driving the app.
+
+### Data model as built (Prompt 2)
+- Jira is the system of record: issue types Permit / Inspection / RFI / Punch Item / Code Finding,
+  link types Blocks / Requires Prior Inspection / Governed By Permit, Forge fields Trade,
+  Location / Level, Permit number, Jurisdiction, Foreman risk score (read-only), Foreman stage
+  (read-only). Jira status category mirrors the Foreman stage (company-managed kanban workflow).
+- Issue entity property `foreman` (indexed via `jira:entityProperty`, JQL aliases
+  `foremanSeed`, `foremanKind`, `foremanStage`, `foremanScheduled`, `foremanSubmitted`,
+  `foremanExpires`, `foremanContractor`) holds dates, parties, assignment ack, checklist, sheets.
+- Forge SQL: `plan_sets`, `evidence`, `proposals`, `audit_log`, `jobs`. KVS: `demo:FMD` seed
+  state, `project:<KEY>:meta` project metadata + parties.
+- Demo seed (`src/seed/dataset.ts`, `src/services/demoSeed.ts`): 7 resumable resolver steps,
+  dates are offsets from the seed day so planted problems always hold. Reset deletes only
+  `foreman-demo` issues in the Foreman-owned project (project property `foreman`).
+
 ## Architecture rules
 - Every agent/monitor **write** becomes a `Proposal` row (status `pending`) that a human
   approves in the Approval Queue. Approving executes it. Nothing auto-passes an inspection.

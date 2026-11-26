@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { AuditRow, call, Job, Status, waitForJob } from './api';
 
 /** P1 wiring check: resolver, async queue + consumer, SQL, audit log. Replaced by real UI in later prompts. */
-export function Diagnostics({ title, subtitle }: { title: string; subtitle: string }) {
+export function Diagnostics({ title, subtitle, embedded }: { title?: string; subtitle?: string; embedded?: boolean }) {
   const [status, setStatus] = useState<Status | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [job, setJob] = useState<Job | null>(null);
@@ -33,11 +33,13 @@ export function Diagnostics({ title, subtitle }: { title: string; subtitle: stri
   };
 
   return (
-    <main className="fm-page">
-      <header className="fm-header">
-        <h1>{title}</h1>
-        <p className="fm-muted">{subtitle}</p>
-      </header>
+    <div className={embedded ? '' : 'fm-page'}>
+      {!embedded && (
+        <header className="fm-header">
+          <h1>{title}</h1>
+          <p className="fm-muted">{subtitle}</p>
+        </header>
+      )}
 
       {error && (
         <div role="alert" className="fm-banner fm-banner--error">
@@ -96,6 +98,6 @@ export function Diagnostics({ title, subtitle }: { title: string; subtitle: stri
           </table>
         )}
       </section>
-    </main>
+    </div>
   );
 }

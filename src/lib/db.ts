@@ -59,6 +59,41 @@ export const MIGRATIONS: [name: string, ddl: string][] = [
       INDEX idx_proposals_project_state (project_key, state)
     )`,
   ],
+  [
+    'v004_plan_sets',
+    `CREATE TABLE IF NOT EXISTS plan_sets (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      project_key VARCHAR(32) NOT NULL,
+      sheet_id VARCHAR(32) NOT NULL,
+      title VARCHAR(255) NOT NULL,
+      discipline VARCHAR(64) NULL,
+      text MEDIUMTEXT NOT NULL,
+      source VARCHAR(32) NOT NULL DEFAULT 'pasted',
+      seed_tag VARCHAR(32) NULL,
+      created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      UNIQUE KEY uq_plan_sets_sheet (project_key, sheet_id)
+    )`,
+  ],
+  [
+    'v005_evidence',
+    `CREATE TABLE IF NOT EXISTS evidence (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      project_key VARCHAR(32) NOT NULL,
+      issue_key VARCHAR(64) NOT NULL,
+      kind VARCHAR(16) NOT NULL,
+      title VARCHAR(255) NULL,
+      text MEDIUMTEXT NULL,
+      author VARCHAR(128) NULL,
+      captured_at DATETIME(3) NULL,
+      attachment_id VARCHAR(32) NULL,
+      comment_id VARCHAR(32) NULL,
+      exif_json JSON NULL,
+      seed_tag VARCHAR(64) NULL,
+      created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      INDEX idx_evidence_issue (issue_key),
+      UNIQUE KEY uq_evidence_seed (project_key, seed_tag)
+    )`,
+  ],
 ];
 
 let schemaReady = false;

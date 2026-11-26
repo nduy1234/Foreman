@@ -23,6 +23,61 @@ modules:
         function: resolver-fn
       viewportSize: large
 
+  jira:customField:
+    - key: foreman-trade
+      name: Trade
+      description: Construction trade responsible for this work (Foreman).
+      type: string
+    - key: foreman-level
+      name: Location / Level
+      description: Building level or area, e.g. Level 2 or Foundation (Foreman).
+      type: string
+    - key: foreman-permit-no
+      name: Permit number
+      description: Jurisdiction permit number this work falls under (Foreman).
+      type: string
+    - key: foreman-jurisdiction
+      name: Jurisdiction
+      description: Authority having jurisdiction for permits and inspections (Foreman).
+      type: string
+    - key: foreman-risk
+      name: Foreman risk score
+      description: 0-100 risk score computed by the Foreman monitor. Read-only.
+      type: number
+      readOnly: true
+    - key: foreman-stage
+      name: Foreman stage
+      description: Permit or inspection stage tracked by Foreman (for example In Review, Scheduled, Passed). Read-only; changes go through Foreman approvals.
+      type: string
+      readOnly: true
+
+  jira:entityProperty:
+    - key: foreman-issue-property
+      entityType: issue
+      propertyKey: foreman
+      values:
+        - path: seedId
+          type: string
+          searchAlias: foremanSeed
+        - path: kind
+          type: string
+          searchAlias: foremanKind
+        - path: stage
+          type: string
+          searchAlias: foremanStage
+        - path: scheduledFor
+          type: date
+          searchAlias: foremanScheduled
+        - path: submittedOn
+          type: date
+          searchAlias: foremanSubmitted
+        - path: expiresOn
+          type: date
+          searchAlias: foremanExpires
+        - path: contractor
+          type: string
+          searchAlias: foremanContractor
+
   rovo:agent:
     - key: foreman-agent
       name: Foreman
@@ -121,7 +176,19 @@ resources:
 
 permissions:
   scopes:
-    # Read issues for the monitor, issue panel, Rovo actions and issue event triggers.
+    # Read issues, projects and statuses (monitor, panels, Rovo actions, event triggers).
     - read:jira-work
-    # Forge hosted storage (KVS for config).
+    # Create demo work items, comments, attachments, links and transitions; set Foreman field values.
+    - write:jira-work
+    # Demo setup: issue types, issue type scheme, link types, screens, project creation.
+    - manage:jira-configuration
+    # Demo setup: project properties and scheme assignment on the Foreman demo project.
+    - manage:jira-project
+    # Current user (project lead for the demo project).
+    - read:jira-user
+    # Forge hosted storage (KVS for config and demo state).
     - storage:app
+  content:
+    # Inline style attributes in Custom UI (progress bars, dynamic widths).
+    styles:
+      - unsafe-inline
