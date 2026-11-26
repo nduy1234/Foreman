@@ -1,0 +1,68 @@
+[
+  {
+    "id": "STR-1809.4",
+    "category": "structural",
+    "title": "Footing depth and bearing",
+    "citation": "IBC 2021 Sections 1809.4 and 1809.2",
+    "severity": "high",
+    "disciplines": ["Structural"],
+    "appliesWhen": {},
+    "test": "Pass if footings bear on undisturbed soil or engineered fill and are at least 12 in. below the undisturbed ground surface, consistent with the geotechnical report. Fail if bearing or depth conflicts with these requirements.",
+    "evidenceHints": ["footing", "native soil", "undisturbed"]
+  },
+  {
+    "id": "STR-1803.1",
+    "category": "structural",
+    "title": "Geotechnical investigation referenced",
+    "citation": "IBC 2021 Section 1803.1",
+    "severity": "medium",
+    "disciplines": ["Structural"],
+    "appliesWhen": {},
+    "test": "Pass if the foundation design references a geotechnical investigation report. Fail if no report is referenced where foundations are designed.",
+    "evidenceHints": ["geotechnical report"]
+  },
+  {
+    "id": "STR-ACI-19.2.1",
+    "category": "structural",
+    "title": "Minimum specified concrete strength",
+    "citation": "ACI 318-19 Table 19.2.1.1",
+    "severity": "medium",
+    "disciplines": ["Structural"],
+    "appliesWhen": {},
+    "test": "Pass if the specified compressive strength of structural concrete is at least 2,500 psi. Fail if a lower strength is specified. Needs review if no strength is specified.",
+    "evidenceHints": ["psi", "28 days"]
+  },
+  {
+    "id": "STR-ACI-20.5.1.3",
+    "category": "structural",
+    "title": "Concrete cover for concrete cast against earth",
+    "citation": "ACI 318-19 Table 20.5.1.3.1",
+    "severity": "high",
+    "disciplines": ["Structural"],
+    "appliesWhen": {},
+    "test": "Pass if reinforcement in concrete cast against and permanently in contact with earth has at least 3 in. of clear cover. Fail if less cover is specified.",
+    "evidenceHints": ["clear cover", "3 in"]
+  },
+  {
+    "id": "STR-1705.3",
+    "category": "structural",
+    "title": "Special inspection of reinforcement placement",
+    "citation": "IBC 2021 Section 1705.3, Table 1705.3",
+    "severity": "medium",
+    "disciplines": ["Structural"],
+    "appliesWhen": {},
+    "test": "Pass if the documents require special inspection of reinforcing steel placement before concrete placement. Fail if reinforced concrete is shown with no special inspection requirement.",
+    "evidenceHints": ["special inspection"]
+  },
+  {
+    "id": "STR-1907.1",
+    "category": "structural",
+    "title": "Vapor retarder under slab on grade",
+    "citation": "IBC 2021 Section 1907.1",
+    "severity": "low",
+    "disciplines": ["Structural"],
+    "appliesWhen": {},
+    "test": "Pass if a vapor retarder is specified under the slab on grade with lapped joints (at least 6 in.). Fail if omitted where the slab is over an occupied space. Needs review if not stated.",
+    "evidenceHints": ["vapor retarder", "lapped"]
+  }
+]

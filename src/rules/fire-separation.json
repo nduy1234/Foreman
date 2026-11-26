@@ -1,0 +1,90 @@
+[
+  {
+    "id": "FIR-1020.2",
+    "category": "fire-separation",
+    "title": "Corridor fire-resistance rating",
+    "citation": "IBC 2021 Section 1020.2, Table 1020.2",
+    "severity": "high",
+    "disciplines": ["Architectural"],
+    "appliesWhen": { "occupancy": ["R-2"] },
+    "test": "Pass if corridors serving more than 10 occupants in Group R have at least a 0.5-hour fire-resistance rating when sprinklered (1 hour unsprinklered). Fail if corridor walls are shown unrated or below the required rating.",
+    "evidenceHints": ["corridor walls", "fire-resistance-rated", "1-hour"]
+  },
+  {
+    "id": "FIR-716.2.2.1",
+    "category": "fire-separation",
+    "title": "Corridor door assemblies",
+    "citation": "IBC 2021 Section 716.2.2.1, Table 716.1(2)",
+    "severity": "medium",
+    "disciplines": ["Architectural"],
+    "appliesWhen": {},
+    "test": "Pass if doors in fire-resistance-rated corridors are at least 20-minute rated and self-closing or automatic-closing with positive latching. Fail if corridor doors are unrated or not self-closing.",
+    "evidenceHints": ["corridor doors", "20-minute", "self-closing"]
+  },
+  {
+    "id": "FIR-708.4",
+    "category": "fire-separation",
+    "title": "Fire partitions extend to the floor or roof deck above",
+    "citation": "IBC 2021 Section 708.4",
+    "severity": "medium",
+    "disciplines": ["Architectural"],
+    "appliesWhen": {},
+    "test": "Pass if rated fire partitions (corridor walls, dwelling unit separations) extend from the floor to the underside of the floor or roof deck above, or to a rated ceiling. Fail if they stop at a non-rated ceiling.",
+    "evidenceHints": ["full height", "underside of floor deck"]
+  },
+  {
+    "id": "FIR-714.4",
+    "category": "fire-separation",
+    "title": "Penetrations of rated walls use listed firestop systems",
+    "citation": "IBC 2021 Section 714.4",
+    "severity": "high",
+    "disciplines": ["Architectural", "Fire Protection"],
+    "appliesWhen": {},
+    "test": "Pass if penetrations of fire-resistance-rated walls are protected by specified tested or listed firestop systems. Fail if the firestop systems are not specified, deferred or marked to be submitted later.",
+    "evidenceHints": ["penetrations", "firestop"]
+  },
+  {
+    "id": "FIR-420.2",
+    "category": "fire-separation",
+    "title": "Dwelling unit separations",
+    "citation": "IBC 2021 Section 420.2",
+    "severity": "high",
+    "disciplines": ["Architectural"],
+    "appliesWhen": { "occupancy": ["R-2"] },
+    "test": "Pass if walls separating dwelling units from each other and from corridors are fire partitions per Section 708 (1 hour, or 0.5 hour in Type IIB, IIIB and VB with sprinklers). Fail if unit separation walls are shown unrated.",
+    "evidenceHints": ["dwelling unit", "fire partition", "unit separation"]
+  },
+  {
+    "id": "FIR-510.2",
+    "category": "fire-separation",
+    "title": "Podium horizontal building separation",
+    "citation": "IBC 2021 Section 510.2",
+    "severity": "critical",
+    "disciplines": ["Architectural", "Structural"],
+    "appliesWhen": { "constructionTypes": ["podium"] },
+    "test": "Pass if the podium (Type IA) is separated from the building above by a horizontal assembly with at least a 3-hour fire-resistance rating. Fail if the separation is shown with a lower rating. Needs review if the podium separation is not documented on this sheet.",
+    "evidenceHints": ["3-hour", "horizontal assembly", "podium"]
+  },
+  {
+    "id": "FIR-903.2.8",
+    "category": "fire-separation",
+    "title": "Automatic sprinklers in Group R",
+    "citation": "IBC 2021 Section 903.2.8",
+    "severity": "critical",
+    "disciplines": ["Architectural", "Fire Protection"],
+    "appliesWhen": { "occupancy": ["R-2"] },
+    "test": "Pass if an automatic sprinkler system is provided throughout buildings containing a Group R fire area. Fail if the building is shown unsprinklered or only partially sprinklered.",
+    "evidenceHints": ["sprinklered", "NFPA 13"]
+  },
+  {
+    "id": "FIR-1023.2",
+    "category": "fire-separation",
+    "title": "Interior exit stairway enclosure rating",
+    "citation": "IBC 2021 Section 1023.2",
+    "severity": "high",
+    "disciplines": ["Architectural"],
+    "appliesWhen": { "minStories": 4 },
+    "test": "Pass if interior exit stairways connecting four or more stories are enclosed with 2-hour fire barriers (1 hour when connecting fewer than four stories). Fail if a lower rating is shown. Needs review if the stair enclosure rating is not stated.",
+    "evidenceHints": ["stair", "2-hour", "enclosure"]
+  }
+]

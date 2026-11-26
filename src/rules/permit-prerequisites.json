@@ -1,0 +1,46 @@
+[
+  {
+    "id": "PRM-107.2.3",
+    "category": "permit-prerequisite",
+    "title": "Means of egress shown in the construction documents",
+    "citation": "IBC 2021 Section 107.2.3",
+    "severity": "medium",
+    "disciplines": ["Architectural"],
+    "appliesWhen": {},
+    "test": "Pass if the construction documents show the means of egress, including path of exit travel and occupant loads, in sufficient detail. Fail if egress information is missing from the floor plan.",
+    "evidenceHints": ["occupant load", "exits", "travel distance"]
+  },
+  {
+    "id": "PRM-107.2.1",
+    "category": "permit-prerequisite",
+    "title": "Fire-resistance-rated assemblies and penetrations detailed",
+    "citation": "IBC 2021 Section 107.2.1",
+    "severity": "high",
+    "disciplines": ["Architectural", "Fire Protection"],
+    "appliesWhen": {},
+    "test": "Pass if the documents identify rated assemblies with tested design numbers and detail the protection of their penetrations. Fail if penetration protection details are deferred, missing or marked to be submitted.",
+    "evidenceHints": ["UL", "penetrations", "to be submitted"]
+  },
+  {
+    "id": "PRM-107.2.2",
+    "category": "permit-prerequisite",
+    "title": "Fire protection shop drawings submitted before installation",
+    "citation": "IBC 2021 Section 107.2.2",
+    "severity": "high",
+    "disciplines": ["Fire Protection"],
+    "appliesWhen": {},
+    "test": "Pass if fire protection system design and shop drawings are complete and approved before installation begins. Fail if required system components or schedules are marked as deferred or to be submitted. Needs review if status is unclear.",
+    "evidenceHints": ["to be submitted", "shop drawings", "coordinate"]
+  },
+  {
+    "id": "PRM-1704.3",
+    "category": "permit-prerequisite",
+    "title": "Statement of special inspections",
+    "citation": "IBC 2021 Section 1704.3",
+    "severity": "medium",
+    "disciplines": ["Structural"],
+    "appliesWhen": {},
+    "test": "Pass if the structural documents include or reference a statement of special inspections covering required special inspections. Fail if special inspections are required but no statement or inspection requirement is included.",
+    "evidenceHints": ["special inspection"]
+  }
+]

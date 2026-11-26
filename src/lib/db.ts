@@ -94,6 +94,34 @@ export const MIGRATIONS: [name: string, ddl: string][] = [
       UNIQUE KEY uq_evidence_seed (project_key, seed_tag)
     )`,
   ],
+  [
+    'v006_findings',
+    `CREATE TABLE IF NOT EXISTS findings (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      project_key VARCHAR(32) NOT NULL,
+      issue_key VARCHAR(64) NOT NULL,
+      sheet_id VARCHAR(32) NOT NULL,
+      job_id BIGINT NULL,
+      rule_id VARCHAR(64) NOT NULL,
+      category VARCHAR(32) NOT NULL,
+      title VARCHAR(255) NOT NULL,
+      citation VARCHAR(255) NOT NULL,
+      severity VARCHAR(16) NOT NULL,
+      status VARCHAR(16) NOT NULL,
+      evidence_quote TEXT NOT NULL,
+      confidence DECIMAL(4,2) NOT NULL,
+      suggested_fix TEXT NULL,
+      reasoning TEXT NULL,
+      state VARCHAR(16) NOT NULL DEFAULT 'open',
+      created_issue_key VARCHAR(64) NULL,
+      decided_by VARCHAR(128) NULL,
+      decided_at DATETIME(3) NULL,
+      decision_note VARCHAR(500) NULL,
+      created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      INDEX idx_findings_issue (issue_key, state),
+      INDEX idx_findings_project (project_key, state)
+    )`,
+  ],
 ];
 
 let schemaReady = false;

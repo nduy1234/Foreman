@@ -1,0 +1,90 @@
+[
+  {
+    "id": "ADA-403.5.1",
+    "category": "accessibility",
+    "title": "Accessible route clear width",
+    "citation": "2010 ADA Standards Section 403.5.1",
+    "severity": "high",
+    "disciplines": ["Architectural"],
+    "appliesWhen": {},
+    "test": "Pass if accessible routes, including corridors, provide at least 36 in. clear width. Fail if an accessible route is shown narrower than 36 in.",
+    "evidenceHints": ["clear width", "accessible route", "corridor"]
+  },
+  {
+    "id": "ADA-405.2",
+    "category": "accessibility",
+    "title": "Ramp running slope",
+    "citation": "2010 ADA Standards Section 405.2",
+    "severity": "high",
+    "disciplines": ["Architectural"],
+    "appliesWhen": {},
+    "test": "Pass if ramp runs have a running slope not steeper than 1:12, and walking surfaces on accessible routes not steeper than 1:20 unless designed as ramps. Fail if a steeper slope is shown.",
+    "evidenceHints": ["slope", "ramp", "1:12", "1:20"]
+  },
+  {
+    "id": "ADA-404.2.7",
+    "category": "accessibility",
+    "title": "Door hardware type and mounting height",
+    "citation": "2010 ADA Standards Section 404.2.7",
+    "severity": "medium",
+    "disciplines": ["Architectural"],
+    "appliesWhen": {},
+    "test": "Pass if door hardware is operable with one hand without tight grasping or twisting (for example lever handles) and mounted 34 in. to 48 in. above the finished floor. Fail if knobs or a mounting height outside that range are shown.",
+    "evidenceHints": ["lever", "hardware", "34-48"]
+  },
+  {
+    "id": "ADA-404.2.4",
+    "category": "accessibility",
+    "title": "Door maneuvering clearance",
+    "citation": "2010 ADA Standards Section 404.2.4, Table 404.2.4.1",
+    "severity": "medium",
+    "disciplines": ["Architectural"],
+    "appliesWhen": {},
+    "test": "Pass if a front-approach pull side of an accessible door has at least 18 in. of clearance beyond the latch side. Fail if less is shown.",
+    "evidenceHints": ["maneuvering clearance", "latch side"]
+  },
+  {
+    "id": "ADA-1108.6.2",
+    "category": "accessibility",
+    "title": "Accessible (Type A) dwelling units provided",
+    "citation": "IBC 2021 Section 1108.6.2.2.1",
+    "severity": "high",
+    "disciplines": ["Architectural"],
+    "appliesWhen": { "occupancy": ["R-2"] },
+    "test": "Pass if Group R-2 buildings with more than 20 dwelling units provide at least 2 percent Type A units (and Type B units where required). Fail if no Type A units are designated. Needs review if the unit count on this level cannot confirm the percentage.",
+    "evidenceHints": ["Type A", "Type B", "accessible units"]
+  },
+  {
+    "id": "ADA-1009.1",
+    "category": "accessibility",
+    "title": "Accessible means of egress",
+    "citation": "IBC 2021 Sections 1009.1 and 1009.3",
+    "severity": "high",
+    "disciplines": ["Architectural"],
+    "appliesWhen": { "minStories": 2 },
+    "test": "Pass if accessible spaces have at least two accessible means of egress; in sprinklered buildings exit stairways may qualify without areas of refuge where the exception applies. Fail if accessible upper floors have no accessible means of egress strategy. Needs review if not addressed.",
+    "evidenceHints": ["accessible means of egress", "area of refuge", "sprinklered"]
+  },
+  {
+    "id": "ADA-216.4",
+    "category": "accessibility",
+    "title": "Tactile exit signage at exit doors",
+    "citation": "2010 ADA Standards Section 216.4.1",
+    "severity": "low",
+    "disciplines": ["Architectural"],
+    "appliesWhen": {},
+    "test": "Pass if tactile (raised character and braille) exit signs are specified at doors to exit stairways and exit passageways. Needs review if exit signs are shown without tactile signage noted.",
+    "evidenceHints": ["tactile", "exit signs"]
+  },
+  {
+    "id": "ADA-309.4",
+    "category": "accessibility",
+    "title": "Operable parts usable with one hand",
+    "citation": "2010 ADA Standards Section 309.4",
+    "severity": "low",
+    "disciplines": ["Architectural"],
+    "appliesWhen": {},
+    "test": "Pass if operable parts on accessible elements are operable with one hand without tight grasping, pinching or twisting of the wrist and need no more than 5 lbf. Fail if hardware requiring grasping or twisting is specified.",
+    "evidenceHints": ["lever", "operable"]
+  }
+]

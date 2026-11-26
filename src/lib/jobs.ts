@@ -68,3 +68,13 @@ export async function getJob(id: number): Promise<Job | null> {
     updatedAt: String(r.updated_at),
   };
 }
+
+/** Most recent job of a kind started from a given issue (input_json.issueKey). */
+export async function latestJobForIssue(kind: JobKind, issueKey: string): Promise<Job | null> {
+  const [r] = await query<{ id: number }>(
+    `SELECT id FROM jobs WHERE kind = ? AND JSON_UNQUOTE(JSON_EXTRACT(input_json, '$.issueKey')) = ? ORDER BY id DESC LIMIT 1`,
+    kind,
+    issueKey,
+  );
+  return r ? getJob(Number(r.id)) : null;
+}

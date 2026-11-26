@@ -30,11 +30,13 @@ export type Severity = z.infer<typeof Severity>;
 
 /** One curated code rule. Citations reference section numbers; tests are paraphrased. */
 export const Rule = z.object({
-  id: z.string().regex(/^[A-Z]{3}-[\w.]+$/),
+  id: z.string().regex(/^[A-Z]{3}-[\w.-]+$/),
   category: z.enum(['egress', 'fire-separation', 'accessibility', 'structural', 'permit-prerequisite']),
   title: z.string(),
   citation: z.string(),
   severity: Severity,
+  /** Plan disciplines this rule is checked against. Empty = all. */
+  disciplines: z.array(z.enum(['Architectural', 'Structural', 'Fire Protection', 'MEP', 'Civil'])).default([]),
   appliesWhen: z
     .object({
       occupancy: z.array(z.string()).optional(),

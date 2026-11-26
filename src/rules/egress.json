@@ -1,0 +1,112 @@
+[
+  {
+    "id": "EGR-1004.5",
+    "category": "egress",
+    "title": "Occupant load calculated with the correct load factor",
+    "citation": "IBC 2021 Section 1004.5, Table 1004.5",
+    "severity": "medium",
+    "disciplines": ["Architectural"],
+    "appliesWhen": {},
+    "test": "Pass if the sheet states an occupant load and the factor used matches the use (residential 200 gross sq ft per occupant, mercantile 60 gross sq ft per occupant). Fail if the factor is wrong for the use. Needs review if no occupant load is shown.",
+    "evidenceHints": ["occupant load", "gross sf per occupant"]
+  },
+  {
+    "id": "EGR-1005.3.2",
+    "category": "egress",
+    "title": "Egress capacity of doors and corridors",
+    "citation": "IBC 2021 Section 1005.3.2",
+    "severity": "high",
+    "disciplines": ["Architectural"],
+    "appliesWhen": {},
+    "test": "Pass if the egress width of doors, corridors and other components (other than stairs) is at least 0.2 in. per occupant served, using the stated occupant load. Fail if the documented width is less.",
+    "evidenceHints": ["occupant load", "clear width", "corridor"]
+  },
+  {
+    "id": "EGR-1006.3",
+    "category": "egress",
+    "title": "Minimum number of exits per story",
+    "citation": "IBC 2021 Section 1006.3, Table 1006.3.3",
+    "severity": "critical",
+    "disciplines": ["Architectural"],
+    "appliesWhen": { "minStories": 2 },
+    "test": "Pass if each story with an occupant load of 1 to 500 has at least two exits or access to two exits. Fail if only one exit is shown and no single-exit exception is claimed.",
+    "evidenceHints": ["exits", "stair"]
+  },
+  {
+    "id": "EGR-1007.1.1",
+    "category": "egress",
+    "title": "Separation of two exits (one-third diagonal when sprinklered)",
+    "citation": "IBC 2021 Section 1007.1.1, Exception 2",
+    "severity": "high",
+    "disciplines": ["Architectural"],
+    "appliesWhen": {},
+    "test": "Pass if the two exits are separated by at least one-half of the overall diagonal of the area served, or at least one-third of that diagonal when the building is fully sprinklered. Fail if the stated separation is less than the required fraction of the stated diagonal.",
+    "evidenceHints": ["apart", "diagonal", "exit separation"]
+  },
+  {
+    "id": "EGR-1006.2.1",
+    "category": "egress",
+    "title": "Common path of egress travel",
+    "citation": "IBC 2021 Section 1006.2.1, Table 1006.2.1",
+    "severity": "medium",
+    "disciplines": ["Architectural"],
+    "appliesWhen": { "occupancy": ["R-2"] },
+    "test": "Pass if the common path of egress travel in Group R-2 does not exceed 125 ft in a sprinklered building (75 ft unsprinklered). Fail if a longer common path is shown.",
+    "evidenceHints": ["common path"]
+  },
+  {
+    "id": "EGR-1017.2",
+    "category": "egress",
+    "title": "Exit access travel distance",
+    "citation": "IBC 2021 Section 1017.2, Table 1017.2",
+    "severity": "high",
+    "disciplines": ["Architectural"],
+    "appliesWhen": { "occupancy": ["R-2"] },
+    "test": "Pass if the maximum exit access travel distance in Group R-2 is 250 ft or less in a sprinklered building (200 ft unsprinklered). Fail if the stated maximum travel distance is longer.",
+    "evidenceHints": ["travel distance"]
+  },
+  {
+    "id": "EGR-1020.3",
+    "category": "egress",
+    "title": "Minimum corridor width",
+    "citation": "IBC 2021 Section 1020.3, Table 1020.3",
+    "severity": "high",
+    "disciplines": ["Architectural"],
+    "appliesWhen": {},
+    "test": "Pass if corridors serving an occupant load of 50 or more are at least 44 in. clear (36 in. allowed only where the occupant load served is less than 50). Fail if a corridor serving 50 or more occupants is shown narrower than 44 in.",
+    "evidenceHints": ["corridor clear width", "corridor"]
+  },
+  {
+    "id": "EGR-1020.5",
+    "category": "egress",
+    "title": "Dead-end corridor length",
+    "citation": "IBC 2021 Section 1020.5, Exception 2",
+    "severity": "high",
+    "disciplines": ["Architectural"],
+    "appliesWhen": {},
+    "test": "Pass if dead-end corridors do not exceed 20 ft, or 50 ft in Group B, E, F, I-1, M, R-1, R-2, S and U occupancies in a fully sprinklered building. Fail if a longer dead end is shown.",
+    "evidenceHints": ["dead end"]
+  },
+  {
+    "id": "EGR-1010.1.1",
+    "category": "egress",
+    "title": "Egress door clear width",
+    "citation": "IBC 2021 Section 1010.1.1",
+    "severity": "medium",
+    "disciplines": ["Architectural"],
+    "appliesWhen": {},
+    "test": "Pass if means of egress doors provide at least 32 in. clear width. Fail if a smaller clear width is shown for an egress door.",
+    "evidenceHints": ["clear width", "door"]
+  },
+  {
+    "id": "EGR-1013.1",
+    "category": "egress",
+    "title": "Exit signs and emergency illumination",
+    "citation": "IBC 2021 Sections 1013.1 and 1008.3.5",
+    "severity": "medium",
+    "disciplines": ["Architectural"],
+    "appliesWhen": {},
+    "test": "Pass if exit signs are shown at exits and where the exit path is not apparent, and emergency illumination of at least 1 foot-candle average along the egress path is specified. Fail if either is missing or the illumination level is lower.",
+    "evidenceHints": ["exit signs", "emergency lighting", "fc"]
+  }
+]
