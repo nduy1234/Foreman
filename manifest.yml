@@ -1,6 +1,5 @@
 app:
-  # Replaced by `forge register`.
-  id: ari:cloud:ecosystem::app/00000000-0000-0000-0000-000000000000
+  id: ari:cloud:ecosystem::app/53d4112c-bcbe-4a7e-ade7-a44df94a6995
   runtime:
     name: nodejs24.x
     memoryMB: 512
@@ -27,7 +26,9 @@ modules:
   rovo:agent:
     - key: foreman-agent
       name: Foreman
-      description: Construction operations agent. Reviews plans against code rules, tracks permits and inspections, explains project risks, and drafts approvable proposals.
+      description: Construction operations agent. Reviews plans against code rules,
+        tracks permits and inspections, explains project risks, and drafts
+        approvable proposals.
       prompt: resource:agent-resources;foreman-prompt.txt
       conversationStarters:
         - What's blocking our framing inspection?
@@ -41,16 +42,17 @@ modules:
       name: Get project risks
       function: get-project-risks-fn
       actionVerb: GET
-      description: |
-        Returns the current risk picture for a Foreman construction project: risk scores per
-        permit and inspection, detected problems (out-of-sequence inspections, stuck permits,
-        expiring permits, aging RFIs, contradictions), and the plain-English reason for each.
+      description: >-
+        Returns risk scores and detected problems for a Foreman construction project
+        (out-of-sequence inspections, stuck or expiring permits, aging RFIs,
+        contradictions), each with a plain-English reason.
       inputs:
         projectKey:
           title: Jira project key
           type: string
           required: false
-          description: Key of the Jira project (for example FMD). Optional when invoked from inside a project or issue.
+          description: Key of the Jira project (for example FMD). Optional when invoked
+            from inside a project or issue.
 
   llm:
     - key: foreman-llm
@@ -102,7 +104,6 @@ modules:
       timeoutSeconds: 300
     - key: lifecycle-fn
       handler: index.lifecycle
-      timeoutSeconds: 120
     - key: issue-events-fn
       handler: index.issueEvents
     - key: get-project-risks-fn
