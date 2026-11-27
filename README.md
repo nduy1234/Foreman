@@ -49,3 +49,7 @@ QA and Marketplace docs.
   - [privacy & security](docs/marketplace/PRIVACY_SECURITY.md)
   - [data handling](docs/marketplace/DATA_HANDLING.md)
   - [Developer Console steps](docs/marketplace/DEVELOPER_CONSOLE_STEPS.md)
+- Devpost:
+  - [submission](docs/devpost/SUBMISSION.md)
+  - [judge testing](docs/devpost/TESTING.md)
+  - [video script](docs/devpost/VIDEO_SCRIPT.md)
