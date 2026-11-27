@@ -3,11 +3,12 @@ import { createRoot } from 'react-dom/client';
 import { view } from '@forge/bridge';
 import { CodeReview } from '@shared/CodeReview';
 import { EvidenceReport } from '@shared/EvidenceReport';
+import { GraphContext } from '@shared/GraphContext';
 import '@shared/base.css';
 
 view.theme.enable().catch(() => undefined);
 
-type Tab = 'evidence' | 'code';
+type Tab = 'evidence' | 'code' | 'context';
 
 function Panel() {
   const [tab, setTab] = useState<Tab | null>(null);
@@ -31,8 +32,11 @@ function Panel() {
         <button role="tab" aria-selected={tab === 'code'} className={tab === 'code' ? 'is-active' : ''} onClick={() => setTab('code')}>
           Code review
         </button>
+        <button role="tab" aria-selected={tab === 'context'} className={tab === 'context' ? 'is-active' : ''} onClick={() => setTab('context')}>
+          Context
+        </button>
       </div>
-      <div role="tabpanel">{tab === 'evidence' ? <EvidenceReport /> : <CodeReview />}</div>
+      <div role="tabpanel">{tab === 'evidence' ? <EvidenceReport /> : tab === 'context' ? <GraphContext /> : <CodeReview />}</div>
     </main>
   );
 }

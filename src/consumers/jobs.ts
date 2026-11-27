@@ -6,6 +6,7 @@ import { runPlanReviewJob } from '../services/planReviewJob';
 import { runEvidenceReportJob } from '../services/evidenceReportJob';
 import { buildDigest, storeDigest } from '../services/monitor/digest';
 import { runMonitor } from '../services/monitor/run';
+import { syncPortalToGraph } from '../services/twg/connector';
 
 type JobHandler = (
   input: Record<string, unknown>,
@@ -21,6 +22,7 @@ const handlers: Partial<Record<JobEventBody['kind'], JobHandler>> = {
   },
   plan_review: (input, progress, jobId) => runPlanReviewJob(jobId, input, progress),
   evidence_report: (input, progress, jobId) => runEvidenceReportJob(jobId, input, progress),
+  twg_sync: async () => syncPortalToGraph(),
   monitor_scan: async (input, progress) => {
     const projectKey = String(input.projectKey);
     await progress(10, 'Scanning project');

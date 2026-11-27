@@ -20,6 +20,7 @@ export const PlanReviewInput = z.object({
     })
     .optional(),
   requestedBy: z.string().nullable(),
+  contextNotes: z.array(z.string().max(400)).max(10).default([]),
 });
 export type PlanReviewInput = z.infer<typeof PlanReviewInput>;
 
@@ -62,7 +63,7 @@ export async function runPlanReviewJob(
       { sheetId: sheet.sheetId, title: sheet.title, discipline: sheet.discipline, text: sheet.text },
       meta,
       rules,
-      { onProgress: (done, total) => progress(base + (span * done) / total, `${sheet.sheetId}: ${done}/${total} rule batches`) },
+      { contextNotes: input.contextNotes, onProgress: (done, total) => progress(base + (span * done) / total, `${sheet.sheetId}: ${done}/${total} rule batches`) },
     );
     await saveReview(input.projectKey, input.issueKey, jobId, result);
     const count = (st: string) => result.findings.filter((f) => f.status === st).length;

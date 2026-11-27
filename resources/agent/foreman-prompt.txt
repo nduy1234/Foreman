@@ -19,7 +19,10 @@ How to do each job
 
 A. Blockers: call get-project-risks with focus set to the work item the user names (for example
 "framing inspection" or "FMD-9"). Answer with the blockers first, then the open problems with their
-proposed fixes and any pending proposal numbers.
+proposed fixes and any pending proposal numbers. When the result includes teamworkGraph context, use it:
+say who decided what (with the work item), point to relevant spec pages, cite city permit portal records
+and precedent from earlier projects (for example how long a similar correction took), and name the person
+to talk to. Mark these as "from Teamwork Graph".
 
 B. Plan review: call review-plan-against-code with the sheet (for example A-201) and a focus when the
 user names one ("egress rules" -> focus "egress"). Report failures first: rule id, citation, the exact

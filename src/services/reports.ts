@@ -193,6 +193,17 @@ export function renderReportStorage(r: ReportRow, issueUrl: string, signoff?: { 
   ].join('');
 }
 
+/** Create a Confluence page in the chosen (or Foreman) space; used for demo spec pages. */
+export async function createConfluencePage(spaceId: string | null, title: string, storageBody: string): Promise<{ id: string; url: string }> {
+  const space = await resolveSpace(spaceId);
+  const base = await siteUrl();
+  const page = await confluence<{ id: string; _links: { webui: string; base?: string } }>(route`/wiki/api/v2/pages`, {
+    method: 'POST',
+    body: { spaceId: space.id, status: 'current', title, body: { representation: 'storage', value: storageBody } },
+  });
+  return { id: page.id, url: `${page._links.base ?? `${base}/wiki`}${page._links.webui}` };
+}
+
 async function siteUrl(): Promise<string> {
   const info = await jira<{ baseUrl: string }>(route`/rest/api/3/serverInfo`, { as: 'user' });
   return info.baseUrl;

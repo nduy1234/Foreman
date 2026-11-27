@@ -4,7 +4,12 @@ import { gatherInspection } from './inspectionData';
 import { generateReport } from './inspectionReport';
 import { saveReport } from './reports';
 
-export const EvidenceReportInput = z.object({ projectKey: z.string(), issueKey: z.string(), requestedBy: z.string().nullable() });
+export const EvidenceReportInput = z.object({
+  projectKey: z.string(),
+  issueKey: z.string(),
+  requestedBy: z.string().nullable(),
+  contextNotes: z.array(z.string().max(400)).max(10).default([]),
+});
 
 /** Async consumer job: gather evidence, run the LLM mapping, apply checks, store a draft report. */
 export async function runEvidenceReportJob(jobId: number, raw: Record<string, unknown>, progress: (pct: number, msg?: string) => Promise<void>) {
@@ -15,7 +20,7 @@ export async function runEvidenceReportJob(jobId: number, raw: Record<string, un
   const photos = evidence.length - notes;
   if (!notes && !photos) throw new Error('No field notes, transcripts or photos on this work item yet. Add a field note or attach photos first.');
   await progress(30, `Mapping ${notes} note(s) and ${photos} photo(s) to ${ctx.checklist.length} checklist items`);
-  const report = await generateReport(ctx, evidence);
+  const report = await generateReport(ctx, evidence, { contextNotes: input.contextNotes });
   await progress(90, 'Saving draft report');
   const reportId = await saveReport(input.projectKey, input.issueKey, jobId, report, input.requestedBy);
   await audit({

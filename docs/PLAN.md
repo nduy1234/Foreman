@@ -173,7 +173,7 @@ heatmap (keep table) → MCP external-client demo (module stays).
 
 | # | Risk | Likelihood / impact | Mitigation |
 |---|---|---|---|
-| R1 | TWG: docs say an app can't both consume API and provide connector | High / Med | Day-2 spike; fallback companion connector app (D2) |
+| R1 | TWG: docs say an app can't both consume API and provide connector | ~~High~~ Resolved / Med | Spike 2026-11-26: both deployed and installed in one app. Runtime confirmation pending on site |
 | R2 | TWG API needs org-admin install + granular scopes; empty results silently if scopes missing; asUser only | Med / High | Context panel shows "graph context unavailable" state with reason; core story works without TWG; seed Confluence pages + comments so graph has something real to return |
 | R3 | Creating issue types/link types/project asApp may need perms the app lacks or workflow quirks | Med / High | Spike week 1; fallback: use built-in Task + `Foreman Type` custom field |
 | R4 | Forge LLM no vision → evidence pipeline weaker | Certain / Med | D1: metadata + notes; honest Needs review; optional BYOK flag |

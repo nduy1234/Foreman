@@ -124,7 +124,7 @@ Do two things:
    rationale: one sentence with the specific values compared.
 summary: two sentences for the inspector. Never say the inspection passed; the inspector decides.`;
 
-export function buildReportPrompt(ctx: InspectionContext, evidence: EvidenceItem[]): string {
+export function buildReportPrompt(ctx: InspectionContext, evidence: EvidenceItem[], contextNotes: string[] = []): string {
   const notes = evidence.filter((e) => e.kind !== 'photo');
   const photos = evidence.filter((e) => e.kind === 'photo');
   const parts = [
@@ -141,6 +141,7 @@ export function buildReportPrompt(ctx: InspectionContext, evidence: EvidenceItem
     ...(ctx.planFindings.length
       ? ['OPEN PLAN-REVIEW FINDINGS:', ...ctx.planFindings.map((f) => `- ${f.ruleId} ${f.title} (${f.status}) on ${f.sheetId}`), '']
       : []),
+    ...(contextNotes.length ? ['DECISIONS AND CITY RECORDS (Teamwork Graph; context only, not field evidence):', ...contextNotes.map((n) => `- ${n}`), ''] : []),
     'FIELD NOTES AND TRANSCRIPTS:',
     ...(notes.length
       ? notes.map((n) => `[${n.id}] ${n.kind} by ${n.author ?? 'unknown'} at ${n.capturedAt ?? 'unknown time'}:\n${n.text}`)
@@ -327,14 +328,14 @@ export function assembleReport(
 export async function generateReport(
   ctx: InspectionContext,
   evidence: EvidenceItem[],
-  opts: { provider?: LlmProvider; today?: string } = {},
+  opts: { provider?: LlmProvider; today?: string; contextNotes?: string[] } = {},
 ): Promise<VerifiedReport> {
   const res = await completeStructured({
     schema: LlmReportSchema,
     toolName: 'write_report',
     toolDescription: 'Write the structured, evidence-linked inspection report.',
     system: REPORT_SYSTEM_PROMPT,
-    user: buildReportPrompt(ctx, evidence),
+    user: buildReportPrompt(ctx, evidence, opts.contextNotes),
     model: MODELS.reasoning,
     maxTokens: 6000,
     provider: opts.provider,

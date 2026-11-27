@@ -93,8 +93,9 @@ human-approved proposals.
 - Contribute: `graph:connector` module + `@forge/teamwork-graph` (`graph.setObjects`,
   ≤100 objects/call, needs `connectionId`), scopes `write/read/delete:object:jira`.
   Admin must create a connection in Admin › Apps › Connected apps.
-- **Docs state an app can either call the TWG API or provide a connector, not both.**
-  Must be verified by spike before relying on both in one app (see PLAN risk R1).
+- Older docs said an app could not both call the TWG API and provide a connector. Spike on
+  2026-11-26: one manifest with `read:graph:*` scopes AND `graph:connector` deployed and installed
+  fine (PLAN R1 resolved at deploy/install level; runtime still to confirm on the site).
 
 ### UI
 - `jira:projectPage` (Command Center), `jira:issuePanel` (Evidence & Code Review). Both
@@ -130,6 +131,19 @@ human-approved proposals.
   as paid apps (PLAN R13). Confluence calls go through `requestConfluence` asUser (v2 pages/spaces).
 - Inspection stage changes go through `src/services/issueStage.ts#setStage`; only inspector
   sign-off (`reports.signOff`) may set `Passed`.
+
+### Teamwork Graph (Prompt 7)
+- Consume (asUser only, curated queries, no registration): `jiraWorkItemComments`, `objects(ids)`,
+  `atlassianUserContent`, `jiraSpaceWorkItems` in `src/services/twg/context.ts`. Schema SDL is public at
+  `https://<site>/gateway/api/graphql/twg/schema`. ARIs need the site cloudId, remembered in KVS
+  `site:cloudId` from resolver context.
+- Contribute: `graph:connector` "City permit portal (demo)" ingests `src/seed/cityPortal.ts` records as
+  `atlassian:work-item` objects with `issueIdOrKeys` associations and city officials as users. An org
+  admin must connect it (Admin > Apps > Connected apps > Foreman > Connections); `onConnectionChange`
+  stores the connectionId and queues `twg_sync`.
+- Context notes (decisions + city records) are computed asUser in resolvers and passed into the
+  plan_review / evidence_report jobs; `getProjectRisks` with a focus returns `teamworkGraph`.
+- Comments starting "Decision (" are decision records, not field evidence.
 
 ### Rovo agent, actions, skills, MCP (Prompt 6)
 - Agent `foreman-agent` (prompt in `resources/agent/foreman-prompt.txt`), 6 actions in

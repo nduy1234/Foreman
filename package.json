@@ -20,6 +20,7 @@
     "@forge/llm": "^1.0.10",
     "@forge/resolver": "^2.0.2",
     "@forge/sql": "^4.0.10",
+    "@forge/teamwork-graph": "^5.4.1",
     "exifr": "^7.1.3",
     "unpdf": "^2.2.2",
     "zod": "^4.6.7"

@@ -6,6 +6,7 @@ import { adf, jira } from '../lib/jira';
 import { enqueueJob, latestJobForIssue } from '../lib/jobs';
 import { commentToEvidence } from '../services/inspectionData';
 import { latestReport, listWritableSpaces, publishReport, signOff } from '../services/reports';
+import { contextNotesFor } from '../services/twg/focus';
 
 /** Field evidence -> verified report resolvers (issue panel "Field evidence" tab). */
 
@@ -81,7 +82,8 @@ export function registerEvidenceResolvers(resolver: Resolver) {
 
   resolver.define('startEvidenceReport', async (req) => {
     const ctx = ctxOf(req);
-    const jobId = await enqueueJob('evidence_report', { projectKey: ctx.projectKey, issueKey: ctx.issueKey, requestedBy: ctx.accountId }, ctx.accountId);
+    const contextNotes = await contextNotesFor(ctx.issueKey, (req.context as { cloudId?: string }).cloudId);
+    const jobId = await enqueueJob('evidence_report', { projectKey: ctx.projectKey, issueKey: ctx.issueKey, requestedBy: ctx.accountId, contextNotes }, ctx.accountId);
     await audit({ actorAccountId: ctx.accountId, actorKind: 'user', action: 'report.requested', target: ctx.issueKey, after: { jobId } });
     return { jobId };
   });

@@ -13,6 +13,8 @@ import { evaluateSheet, selectRules } from '../services/planReview';
 import { getPlanSheet, getProjectMeta } from '../services/projectData';
 import { decideProposal, getProposal, listProposals, upsertProposal } from '../services/proposals';
 import { buildPermitPacket } from './packet';
+import { contextAsText } from '../services/twg/context';
+import { issueGraphContext } from '../services/twg/focus';
 import { ActionContext, ActionPayload, isoDate, resolveIssueRef, resolveProjectKey, str } from './resolve';
 
 /**
@@ -155,12 +157,24 @@ export const getProjectRisks = action('getProjectRisks', async (payload) => {
     ];
     const problems = res.problems.filter((p) => p.issueKey === focus.key || p.relatedKeys.includes(focus.key));
     const risk = res.issueRisk.find((r) => r.issueKey === focus.key);
+    const cloudId = (payload.context as { cloudId?: string } | undefined)?.cloudId ?? null;
+    const graph = await Promise.race([issueGraphContext(focus.key, cloudId).catch(() => null), new Promise<null>((r) => setTimeout(() => r(null), 12_000))]);
     return {
       ...base,
       focus: { key: focus.key, summary: focus.summary, kind: focus.kind, stage: focus.stage, scheduledFor: focus.scheduledFor, contractor: focus.contractor, risk: risk?.score ?? 0 },
       blockers,
       problems: problems.map((p) => ({ severity: p.severity, why: p.why, proposed: p.proposal.title })),
       pendingProposals: pending.filter((p) => p.targetKey === focus.key || problems.some((pr) => pr.key === p.dedupeKey)).map((p) => ({ id: p.id, title: p.title, kind: p.kind })),
+      teamworkGraph: graph
+        ? {
+            available: graph.available,
+            summary: contextAsText(graph) || 'No related people, decisions or documents found in Teamwork Graph.',
+            decisions: graph.decisions.slice(0, 5).map((d) => ({ who: d.who, on: d.issueKey, text: d.text })),
+            people: graph.people.slice(0, 6).map((p) => `${p.name} (${p.roles.slice(0, 2).join(', ')})`),
+            docs: graph.docs.map((d) => d.title),
+            cityPortal: graph.portal.map((r) => `${r.date} ${r.recordId}: ${r.status}. ${r.detail}`),
+          }
+        : { available: false, summary: 'Teamwork Graph context unavailable.' },
     };
   }
 

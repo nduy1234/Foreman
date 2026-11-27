@@ -1,6 +1,9 @@
 import Resolver from '@forge/resolver';
 import { registerEvidenceResolvers } from './evidence';
 import { registerMonitorResolvers } from './monitor';
+import { registerContextResolvers } from './context';
+import { rememberCloudId } from '../services/twg/context';
+import { contextNotesFor } from '../services/twg/focus';
 import { z } from 'zod';
 import { listAudit } from '../lib/audit';
 import { enqueueJob, getJob, latestJobForIssue } from '../lib/jobs';
@@ -36,6 +39,7 @@ function ctxOf(req: { context: unknown }) {
 /** Health/bootstrap info for both UIs. */
 resolver.define('getStatus', async (req) => {
   const ctx = ctxOf(req);
+  await rememberCloudId((req.context as { cloudId?: string }).cloudId);
   return { ok: true, version: APP_VERSION, ...ctx, serverTime: new Date().toISOString() };
 });
 
@@ -177,7 +181,8 @@ resolver.define('startPlanReview', async (req) => {
     .parse(req.payload ?? {});
   if (!payload.sheetIds.length && !payload.pdf) throw new Error('Choose at least one plan sheet');
   if (!(await getProjectMeta(projectKey))) throw new Error('Set the project details first');
-  const jobId = await enqueueJob('plan_review', { projectKey, issueKey, ...payload, requestedBy: ctx.accountId }, ctx.accountId);
+  const contextNotes = await contextNotesFor(issueKey, (req.context as { cloudId?: string }).cloudId);
+  const jobId = await enqueueJob('plan_review', { projectKey, issueKey, ...payload, requestedBy: ctx.accountId, contextNotes }, ctx.accountId);
   await audit({ actorAccountId: ctx.accountId, actorKind: 'user', action: 'plan_review.requested', target: issueKey, after: { jobId, ...payload } });
   return { jobId };
 });
@@ -199,5 +204,6 @@ resolver.define('findingAction', async (req) => {
 
 registerEvidenceResolvers(resolver);
 registerMonitorResolvers(resolver);
+registerContextResolvers(resolver);
 
 export const handler = resolver.getDefinitions();

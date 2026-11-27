@@ -27,7 +27,7 @@ const HEADING_RE = /^(Field note|Voice note transcript)\s*-\s*(.+?)\s*\((\d{4}-\
 /** Classify a Jira comment as field evidence. Foreman's own comments ("[Foreman] ...") are ignored. */
 export function commentToEvidence(c: { id: string; created: string; author?: { displayName?: string }; body: AdfNode }): EvidenceItem | null {
   const text = adfToText(c.body).trim();
-  if (!text || text.startsWith('[Foreman]')) return null;
+  if (!text || text.startsWith('[Foreman') || /^Decision(?: record)?\s*\(/i.test(text)) return null;
   const [first, ...rest] = text.split('\n');
   const m = first.match(HEADING_RE);
   if (m) {

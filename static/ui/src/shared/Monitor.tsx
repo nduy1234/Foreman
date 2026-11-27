@@ -146,6 +146,8 @@ export function Monitor({ notMonitored }: { notMonitored?: ReactNode }) {
 
       {showSettings && <Settings config={ov.config} detectors={ov.detectors} onSaved={load} />}
 
+      <ConnectorCard />
+
       <section aria-labelledby="queue-h">
         <h2 id="queue-h" className="fm-mt">
           Approval queue <span className="fm-count">{ov.pending.length}</span>
@@ -347,6 +349,54 @@ function Settings({ config, detectors, onSaved }: { config: Config; detectors: {
         </button>
         {msg && <span className="fm-muted">{msg}</span>}
       </div>
+    </section>
+  );
+}
+
+function ConnectorCard() {
+  const [c, setC] = useState<{ connected: boolean; name: string | null; lastSync: { at: string; accepted: number; rejected: number; error?: string } | null } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const load = () => call<typeof c>('getGraphConnector').then(setC).catch(() => undefined);
+  useEffect(() => {
+    load();
+  }, []);
+  if (!c) return null;
+  const sync = async () => {
+    setBusy(true);
+    try {
+      const { jobId } = await call<{ jobId: number }>('syncPortalNow');
+      await waitForJob(jobId, () => undefined);
+      await load();
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <section className="fm-card fm-mt" aria-labelledby="twg-h">
+      <div className="fm-findings-head">
+        <h2 id="twg-h">Teamwork Graph: city permit portal</h2>
+        <span className={`fm-pill fm-pill--${c.connected ? 'ok' : 'warn'}`}>{c.connected ? 'Connected' : 'Not connected'}</span>
+      </div>
+      {c.connected ? (
+        <p className="fm-muted">
+          {c.lastSync
+            ? `Last sync ${new Date(c.lastSync.at).toLocaleString()}: ${c.lastSync.accepted} record(s) in Teamwork Graph${c.lastSync.rejected ? `, ${c.lastSync.rejected} rejected` : ''}.`
+            : 'Connected; first sync pending.'}
+        </p>
+      ) : (
+        <p className="fm-muted">
+          Foreman adds plan-check events and inspection results from the city portal to Teamwork Graph, linked to permits, inspections and city
+          officials, so Rovo and search can use them. An org admin connects it once: Atlassian Administration &gt; Apps &gt; Connected apps &gt;
+          Foreman &gt; Connections &gt; City permit portal (demo) &gt; Connect.
+        </p>
+      )}
+      {c.connected && (
+        <div className="fm-actions">
+          <button className="fm-btn fm-btn--subtle" onClick={sync} disabled={busy}>
+            {busy ? 'Syncing…' : 'Sync portal records now'}
+          </button>
+        </div>
+      )}
     </section>
   );
 }

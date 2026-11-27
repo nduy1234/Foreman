@@ -169,7 +169,7 @@ For EVERY rule return one entry:
 Use only the sheet text and project facts given. Do not invent dimensions. Do the arithmetic explicitly.
 This is review guidance for the project team, not a legal determination.`;
 
-export function buildUserPrompt(sheet: PlanSheetInput, meta: ProjectMeta, rules: Rule[]): string {
+export function buildUserPrompt(sheet: PlanSheetInput, meta: ProjectMeta, rules: Rule[], contextNotes: string[] = []): string {
   const facts = [
     `Project: ${meta.name}`,
     `Occupancy: ${meta.occupancy.join(', ')}`,
@@ -182,7 +182,10 @@ export function buildUserPrompt(sheet: PlanSheetInput, meta: ProjectMeta, rules:
   const ruleText = rules
     .map((r) => `- id: ${r.id}\n  citation: ${r.citation}\n  title: ${r.title}\n  test: ${r.test}`)
     .join('\n');
-  return `PROJECT FACTS\n${facts}\n\nSHEET ${sheet.sheetId} - ${sheet.title}\n<<<SHEET TEXT\n${sheet.text}\nSHEET TEXT>>>\n\nRULES (${rules.length})\n${ruleText}\n\nCall report_findings with one entry per rule.`;
+  const ctx = contextNotes.length
+    ? `\n\nPROJECT DECISIONS AND RECORDS (from Teamwork Graph; use to explain findings and fixes, never as evidence quotes)\n${contextNotes.map((n) => `- ${n}`).join('\n')}`
+    : '';
+  return `PROJECT FACTS\n${facts}${ctx}\n\nSHEET ${sheet.sheetId} - ${sheet.title}\n<<<SHEET TEXT\n${sheet.text}\nSHEET TEXT>>>\n\nRULES (${rules.length})\n${ruleText}\n\nCall report_findings with one entry per rule.`;
 }
 
 export interface EvaluateOptions {
@@ -190,6 +193,7 @@ export interface EvaluateOptions {
   model?: string;
   batchSize?: number;
   onProgress?: (done: number, total: number) => Promise<void> | void;
+  contextNotes?: string[];
 }
 
 export async function evaluateSheet(sheet: PlanSheetInput, meta: ProjectMeta, rules: Rule[], opts: EvaluateOptions = {}): Promise<ReviewResult> {
@@ -210,7 +214,7 @@ export async function evaluateSheet(sheet: PlanSheetInput, meta: ProjectMeta, ru
           toolName: 'report_findings',
           toolDescription: 'Report one code-review finding per rule for this plan sheet.',
           system: SYSTEM_PROMPT,
-          user: buildUserPrompt(sheet, meta, batch),
+          user: buildUserPrompt(sheet, meta, batch, opts.contextNotes),
           model,
           maxTokens: 4096,
           provider: opts.provider,
