@@ -1,8 +1,9 @@
 import { ReactNode, useCallback, useEffect, useState } from 'react';
 import { router } from '@forge/bridge';
 import { call, Job, waitForJob } from './api';
+import { fmtDate } from './ui';
 
-interface Problem {
+export interface Problem {
   key: string;
   detector: string;
   detectorLabel: string;
@@ -14,7 +15,7 @@ interface Problem {
   proposalId: number | null;
   firstSeen: string;
 }
-interface Proposal {
+export interface Proposal {
   id: number;
   kind: 'reschedule' | 'notify' | 'escalate' | 'reinspect' | string;
   targetKey: string | null;
@@ -27,7 +28,7 @@ interface Proposal {
   decidedAt: string | null;
   result: unknown;
 }
-interface Config {
+export interface Config {
   enabled: Record<string, boolean>;
   stuckReviewDays: number;
   expiryWarnDays: number;
@@ -38,7 +39,7 @@ interface Config {
   postComments: boolean;
   updateLabels: boolean;
 }
-type Overview =
+export type Overview =
   | { monitored: false; projectKey: string }
   | {
       monitored: true;
@@ -239,13 +240,17 @@ export function Monitor({ notMonitored }: { notMonitored?: ReactNode }) {
   );
 }
 
-function ProposalCard({ p, busy, onDecide }: { p: Proposal; busy: boolean; onDecide: (d: 'approve' | 'reject', note?: string) => void }) {
+export function ProposalCard({ p, busy, onDecide }: { p: Proposal; busy: boolean; onDecide: (d: 'approve' | 'reject', note?: string) => void }) {
   const [rejecting, setRejecting] = useState(false);
   const [note, setNote] = useState('');
   const details: string[] = [];
-  if (p.payload.from && p.payload.to && p.kind !== 'notify' && p.kind !== 'escalate') details.push(`${p.payload.from} → ${p.payload.to}`);
-  if (p.kind === 'reinspect' && p.payload.to) details.push(`New date ${p.payload.to}`);
+  const d = (v: unknown) => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}/.test(v) ? fmtDate(v) : String(v));
+  if (p.kind === 'reschedule' && p.payload.to) details.push(p.payload.from ? `Date: ${d(p.payload.from)} → ${d(p.payload.to)}` : `New date: ${d(p.payload.to)}`);
+  if (p.kind === 'reinspect' && p.payload.to) details.push(`Re-inspection: ${d(p.payload.to)}`);
   if (p.payload.to && (p.kind === 'notify' || p.kind === 'escalate')) details.push(`To: ${p.payload.to}`);
+  const source = p.source === 'agent' ? 'Proposed by Foreman in Rovo chat' : p.source === 'user' ? 'Proposed by a teammate' : 'Proposed by the Foreman monitor';
+  const ageMin = Math.max(0, Math.round((Date.now() - Date.parse(p.createdAt)) / 60000));
+  const age = ageMin < 2 ? 'just now' : ageMin < 60 ? `${ageMin} min ago` : ageMin < 1440 ? `${Math.round(ageMin / 60)} h ago` : `${Math.round(ageMin / 1440)} d ago`;
   return (
     <article className="fm-proposal" aria-label={p.title}>
       <header>
@@ -259,6 +264,9 @@ function ProposalCard({ p, busy, onDecide }: { p: Proposal; busy: boolean; onDec
       </header>
       <p className="fm-reason">{p.why}</p>
       {details.length > 0 && <p className="fm-cite">{details.join(' · ')}</p>}
+      <p className="fm-fine fm-nomargin">
+        #{p.id} · {source} · {age}
+      </p>
       {typeof p.payload.message === 'string' && <blockquote className="fm-quote fm-quote--plain">{p.payload.message}</blockquote>}
       {!rejecting ? (
         <div className="fm-actions">
@@ -294,7 +302,7 @@ function ProposalCard({ p, busy, onDecide }: { p: Proposal; busy: boolean; onDec
   );
 }
 
-function Settings({ config, detectors, onSaved }: { config: Config; detectors: { id: string; label: string }[]; onSaved: () => void }) {
+export function Settings({ config, detectors, onSaved }: { config: Config; detectors: { id: string; label: string }[]; onSaved: () => void }) {
   const [c, setC] = useState<Config>(config);
   const [msg, setMsg] = useState<string | null>(null);
   const num = (k: keyof Config, label: string, unit: string) => (
@@ -353,7 +361,7 @@ function Settings({ config, detectors, onSaved }: { config: Config; detectors: {
   );
 }
 
-function ConnectorCard() {
+export function ConnectorCard() {
   const [c, setC] = useState<{ connected: boolean; name: string | null; lastSync: { at: string; accepted: number; rejected: number; error?: string } | null } | null>(null);
   const [busy, setBusy] = useState(false);
   const load = () => call<typeof c>('getGraphConnector').then(setC).catch(() => undefined);

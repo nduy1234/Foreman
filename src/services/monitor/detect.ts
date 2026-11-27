@@ -15,6 +15,8 @@ export interface MonIssue {
   stage: string | null;
   statusCategory: 'new' | 'indeterminate' | 'done' | string;
   permitNo?: string | null;
+  trade?: string | null;
+  level?: string | null;
   scheduledFor?: string | null;
   submittedOn?: string | null;
   expiresOn?: string | null;
@@ -93,6 +95,7 @@ export interface MonitorResult {
 const DAY = 86_400_000;
 export const daysBetween = (from: string, to: string) => Math.round((Date.parse(to.slice(0, 10)) - Date.parse(from.slice(0, 10))) / DAY);
 export const addDays = (iso: string, n: number) => new Date(Date.parse(iso.slice(0, 10)) + n * DAY).toISOString().slice(0, 10);
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 const fmtDate = (iso: string) => new Date(`${iso.slice(0, 10)}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 
 const SEVERITY_POINTS: Record<Severity, number> = { critical: 45, high: 30, medium: 18, low: 8 };
@@ -180,7 +183,7 @@ export function detect(s: Snapshot, cfg: MonitorConfig): MonitorResult {
         relatedKeys: dependents.map((d) => d.key),
         severity: age >= cfg.stuckReviewDays * 2 || dependents.length ? 'high' : 'medium',
         title: `${p.permitNo ?? p.key} has been ${p.stage?.toLowerCase()} for ${age} days`,
-        why: `${p.summary} was submitted ${age} days ago (threshold ${cfg.stuckReviewDays}) and is still ${p.stage}.${dependents.length ? ` ${dependents.length} inspection(s) depend on it: ${dependents.map((d) => d.key).join(', ')}.` : ''}`,
+        why: `${p.summary} was submitted ${age} days ago (threshold ${cfg.stuckReviewDays}) and is still ${p.stage}.${dependents.length ? ` ${plural(dependents.length, 'inspection')} ${dependents.length === 1 ? 'depends' : 'depend'} on it: ${dependents.map((d) => d.key).join(', ')}.` : ''}`,
         proposal: {
           kind: 'escalate',
           title: `Escalate ${p.permitNo ?? p.key} review to ${s.jurisdiction}`,
@@ -208,7 +211,7 @@ export function detect(s: Snapshot, cfg: MonitorConfig): MonitorResult {
         relatedKeys: openUnder.map((i) => i.key),
         severity: left < 0 ? 'critical' : left <= 7 ? 'high' : 'medium',
         title: left < 0 ? `${p.permitNo ?? p.key} expired ${-left} days ago` : `${p.permitNo ?? p.key} expires in ${left} days`,
-        why: `${p.summary} ${left < 0 ? 'expired' : 'expires'} on ${fmtDate(p.expiresOn!)}${openUnder.length ? ` with ${openUnder.length} inspection(s) still open under it` : ''}. Most jurisdictions require an extension request before expiry.`,
+        why: `${p.summary} ${left < 0 ? 'expired' : 'expires'} on ${fmtDate(p.expiresOn!)}${openUnder.length ? ` with ${plural(openUnder.length, 'inspection')} still open under it` : ''}. Most jurisdictions require an extension request before expiry.`,
         proposal: {
           kind: 'escalate',
           title: `Request extension of ${p.permitNo ?? p.key}`,
@@ -283,21 +286,22 @@ export function detect(s: Snapshot, cfg: MonitorConfig): MonitorResult {
       const reasons: string[] = [];
       if (i.statusCategory === 'done' && i.stage !== 'Passed') reasons.push(`Jira shows it as done but the Foreman stage is ${i.stage ?? 'unknown'} (no inspector sign-off)`);
       // Field notes call out reinforcement that is not on the referenced plan sheets.
-      const planSpecs = new Map<string, string>();
-      for (const sh of i.sheets) for (const c of rebarCallouts(s.planTextBySheet[sh] ?? '')) planSpecs.set(c.spec, `${sh}: "${c.quote}"`);
-      if (planSpecs.size) {
+      const planCallouts = i.sheets.flatMap((sh) => rebarCallouts(s.planTextBySheet[sh] ?? '').map((c) => ({ ...c, sheet: sh })));
+      if (planCallouts.length) {
+        const specs = new Set(planCallouts.map((c) => c.spec));
         for (const note of s.notesByIssue[i.key] ?? []) {
-          const odd = rebarCallouts(note).find((c) => !planSpecs.has(c.spec));
+          const odd = rebarCallouts(note).find((c) => !specs.has(c.spec));
           if (odd) {
-            reasons.push(`field notes record "${odd.quote}" but the plan calls for ${[...planSpecs.values()].join(' / ')}`);
+            const ref = planCallouts[0];
+            reasons.push(`field notes record "${odd.quote}" but ${ref.sheet} calls for "${ref.quote}"`);
             break;
           }
         }
       }
       if (passed(i) && rep && rep.state !== 'approved') reasons.push(`it is marked Passed but report v${rep.version} is ${rep.state.replace('_', ' ')}`);
-      if (rep && rep.conflicts > 0 && (passed(i) || i.statusCategory === 'done')) reasons.push(`report v${rep.version} lists ${rep.conflicts} conflict(s) between field evidence and the plan`);
+      if (rep && rep.conflicts > 0 && (passed(i) || i.statusCategory === 'done')) reasons.push(`report v${rep.version} lists ${plural(rep.conflicts, 'conflict')} between field evidence and the plan`);
       const failing = passed(i) ? i.sheets.reduce((n, sh) => n + (s.openFailFindingsBySheet[sh] ?? 0), 0) : 0;
-      if (failing) reasons.push(`${failing} open code finding(s) fail on its plan sheet(s) ${i.sheets.join(', ')}`);
+      if (failing) reasons.push(`${plural(failing, 'open code finding')} ${failing === 1 ? 'fails' : 'fail'} on ${i.sheets.join(', ')}`);
       if (!reasons.length) continue;
       if (passed(i) && !rep) reasons.push('no signed Foreman inspection report backs the Passed status');
       const hard = (rep?.conflicts ?? 0) > 0 || (i.statusCategory === 'done' && i.stage !== 'Passed') || reasons.some((r) => r.startsWith('field notes record'));
@@ -368,7 +372,7 @@ export function detect(s: Snapshot, cfg: MonitorConfig): MonitorResult {
   const sev = { critical: 0, high: 1, medium: 2, low: 3 } as const;
   const topProblems = [...problems].sort((a, b) => sev[a.severity] - sev[b.severity] || b.points - a.points).slice(0, 3);
   const why = problems.length
-    ? `${problems.length} open problem(s): ${counts.critical + counts.high} critical/high. Biggest drivers: ${topProblems.map((p) => p.title).join('; ')}.`
+    ? `${problems.length} open ${problems.length === 1 ? 'problem' : 'problems'}, ${counts.critical + counts.high} of them critical or high. Biggest drivers: ${topProblems.map((p) => p.title).join('; ')}.`
     : 'No open problems detected.';
 
   return {

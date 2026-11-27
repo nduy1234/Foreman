@@ -8,6 +8,10 @@ import { buildDigest, latestDigest, storeDigest } from '../services/monitor/dige
 import { getMonitorConfig, getProjectRisk, saveMonitorConfig } from '../services/monitor/store';
 import { decideProposal, listProposals } from '../services/proposals';
 import { getProjectMeta } from '../services/projectData';
+import { buildSnapshot } from '../services/monitor/snapshot';
+import { buildHeatmap, buildTimeline } from '../services/visuals';
+import { getConnection } from '../services/twg/connector';
+import { kvs } from '@forge/kvs';
 
 type Ctx = { accountId?: string; extension?: { project?: { key?: string } } };
 
@@ -70,6 +74,47 @@ export function registerMonitorResolvers(resolver: Resolver) {
       detectors: DETECTORS.map((d) => ({ id: d, label: DETECTOR_LABELS[d] })),
       lastJob: lastJob[0] ? await getJob(Number(lastJob[0].id)) : null,
     };
+  });
+
+  resolver.define('getVisuals', async (req) => {
+    const { projectKey } = ctxOf(req);
+    const { snapshot } = await buildSnapshot(projectKey);
+    const risk = await query<{ issue_key: string; score: number }>(`SELECT issue_key, score FROM risk_scores WHERE project_key = ?`, projectKey);
+    const riskByKey = Object.fromEntries(risk.map((r) => [r.issue_key, Number(r.score)]));
+    return {
+      timeline: buildTimeline(snapshot.issues, snapshot.today),
+      heatmap: buildHeatmap(snapshot.issues, riskByKey),
+      issues: Object.fromEntries(snapshot.issues.map((i) => [i.key, { summary: i.summary, kind: i.kind, stage: i.stage, risk: riskByKey[i.key] ?? 0 }])),
+    };
+  });
+
+  /** First-run checklist state across the whole app. */
+  resolver.define('getOnboarding', async (req) => {
+    const { projectKey } = ctxOf(req);
+    const [demo, scans, reports, connector, briefings, dismissed] = await Promise.all([
+      kvs.get('demo:FMD') as Promise<{ completed?: string[] } | undefined>,
+      query<{ n: number }>(`SELECT COUNT(*) AS n FROM audit_log WHERE action = 'monitor.scan'`),
+      query<{ n: number }>(`SELECT COUNT(*) AS n FROM inspection_reports`),
+      getConnection(),
+      query<{ n: number }>(`SELECT COUNT(*) AS n FROM audit_log WHERE action IN ('action.getProjectRisks','action.reviewPlanAgainstCode','action.requestApproval')`),
+      kvs.get(`onboarding:dismissed:${projectKey}`),
+    ]);
+    return {
+      dismissed: !!dismissed,
+      steps: {
+        demoLoaded: !!demo?.completed?.includes('finalize'),
+        monitorRan: Number(scans[0]?.n ?? 0) > 0,
+        reportDrafted: Number(reports[0]?.n ?? 0) > 0,
+        agentUsed: Number(briefings[0]?.n ?? 0) > 0,
+        connectorConnected: !!connector,
+      },
+    };
+  });
+
+  resolver.define('dismissOnboarding', async (req) => {
+    const { projectKey } = ctxOf(req);
+    await kvs.set(`onboarding:dismissed:${projectKey}`, true);
+    return { ok: true };
   });
 
   resolver.define('runMonitorNow', async (req) => {

@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { requestJira, router } from '@forge/bridge';
 import { call, Job, waitForJob } from './api';
+import { EmptyState, ErrorState, fmtDate, Skeleton } from './ui';
+
+const n = (count: number, one: string, many = `${one}s`) => `${count} ${count === 1 ? one : many}`;
 
 type LineStatus = 'verified' | 'needs_review' | 'conflict';
 
@@ -92,7 +95,6 @@ export function EvidenceReport() {
   const [ctx, setCtx] = useState<EvidenceCtx | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [job, setJob] = useState<Job | null>(null);
-  const [open, setOpen] = useState<string | null>(null);
   const [adding, setAdding] = useState<null | 'note' | 'transcript'>(null);
 
   const load = useCallback(async () => {
@@ -136,17 +138,7 @@ export function EvidenceReport() {
     }
   };
 
-  if (!ctx) {
-    return error ? (
-      <div role="alert" className="fm-banner fm-banner--error">
-        {error}
-      </div>
-    ) : (
-      <p className="fm-muted" aria-busy="true">
-        Loading field evidence…
-      </p>
-    );
-  }
+  if (!ctx) return error ? <ErrorState message={error} onRetry={load} /> : <Skeleton lines={5} label="Loading field evidence" />;
 
   const running = !!job && (job.state === 'queued' || job.state === 'running');
   const r = ctx.report;
@@ -165,8 +157,8 @@ export function EvidenceReport() {
       <section className="fm-card" aria-labelledby="ev-h">
         <h2 id="ev-h">Field evidence</h2>
         <p className="fm-muted">
-          {ctx.notes.filter((n) => n.kind === 'note').length} notes · {ctx.notes.filter((n) => n.kind === 'transcript').length} voice transcripts ·{' '}
-          {ctx.photos.length} photos · {ctx.checklistCount} checklist items · stage <strong>{ctx.stage ?? 'unknown'}</strong>
+          {n(ctx.notes.filter((x) => x.kind === 'note').length, 'field note')} · {n(ctx.notes.filter((x) => x.kind === 'transcript').length, 'voice transcript')} ·{' '}
+          {n(ctx.photos.length, 'photo')} · {n(ctx.checklistCount, 'checklist item')} · stage <strong>{ctx.stage ?? 'unknown'}</strong>
         </p>
         {ctx.photos.length > 0 && (
           <div className="fm-photos">
@@ -177,6 +169,11 @@ export function EvidenceReport() {
               </figure>
             ))}
           </div>
+        )}
+        {ctx.notes.length === 0 && ctx.photos.length === 0 && (
+          <EmptyState title="No field evidence yet">
+            Add a field note or voice-note transcript below, or attach site photos to this work item. Foreman links each one to the checklist.
+          </EmptyState>
         )}
         {ctx.notes.length > 0 && (
           <ul className="fm-notes">
@@ -227,37 +224,7 @@ export function EvidenceReport() {
       {r && (
         <>
           <Breakdown report={r} />
-          <section aria-labelledby="lines-h">
-            <h2 id="lines-h" className="fm-mt">
-              Verification lines
-            </h2>
-            <ul className="fm-lines">
-              {r.report.lines.map((l) => (
-                <li key={l.id} className={`fm-line fm-line--${STATUS[l.status].cls}`}>
-                  <button className="fm-line-head" aria-expanded={open === l.id} onClick={() => setOpen(open === l.id ? null : l.id)}>
-                    <span className={`fm-badge fm-badge--${l.status === 'verified' ? 'pass' : l.status === 'conflict' ? 'fail' : 'needs_review'}`}>
-                      {STATUS[l.status].label}
-                    </span>
-                    <span className="fm-kind">{KIND_LABEL[l.kind]}</span>
-                    <span className="fm-line-item">{l.item}</span>
-                    <span className="fm-muted">{l.evidence.length} evidence</span>
-                  </button>
-                  {open === l.id && (
-                    <div className="fm-line-body">
-                      <p className="fm-reason">{l.rationale}</p>
-                      <EvidenceSplit line={l} photos={ctx.photos} />
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-            {r.report.dropped.length > 0 && (
-              <p className="fm-fine">
-                {r.report.dropped.length} unsupported link(s) were discarded (quote not found in source):{' '}
-                {r.report.dropped.map((d) => d.what).join('; ')}.
-              </p>
-            )}
-          </section>
+          <SplitView report={r} photos={ctx.photos} />
           <SignOff report={r} onChanged={load} onError={setError} />
         </>
       )}
@@ -278,7 +245,7 @@ function Breakdown({ report }: { report: Report }) {
     <section className="fm-card" aria-labelledby="bd-h">
       <div className="fm-findings-head">
         <h2 id="bd-h">
-          Report v{report.version} · {report.report.inspectionDate}
+          Report v{report.version} · inspection {fmtDate(report.report.inspectionDate)}
         </h2>
         <span className={`fm-pill fm-pill--${rec.cls}`}>{rec.text}</span>
       </div>
@@ -307,49 +274,118 @@ function Breakdown({ report }: { report: Report }) {
   );
 }
 
-/** Split view for one line: field evidence (photos + quotes) next to the plan / permit / sequence references. */
-function EvidenceSplit({ line, photos }: { line: ReportLine; photos: EvidenceCtx['photos'] }) {
-  const field = line.evidence.filter((e) => e.type === 'observation' || e.type === 'photo');
-  const refs = line.evidence.filter((e) => e.type !== 'observation' && e.type !== 'photo');
+/**
+ * Evidence split view: photos | checklist lines | plan, permit and sequence references.
+ * Selecting a line highlights its photos and shows its references; selecting a photo filters the
+ * lines that cite it. Every status has a text label, not only a colour.
+ */
+function SplitView({ report, photos }: { report: Report; photos: EvidenceCtx['photos'] }) {
+  const lines = report.report.lines;
+  const [lineId, setLineId] = useState<string | null>(() => (lines.find((l) => l.status === 'conflict') ?? lines[0])?.id ?? null);
+  const [photoId, setPhotoId] = useState<string | null>(null);
+  const line = lines.find((l) => l.id === lineId) ?? null;
+  const photoIdsOf = (l: ReportLine) => l.evidence.filter((e) => e.type === 'photo' && e.evidenceId).map((e) => e.evidenceId!.replace('photo-', ''));
+  const linkedPhotos = new Set(line ? photoIdsOf(line) : []);
+  const visibleLines = photoId ? lines.filter((l) => photoIdsOf(l).includes(photoId)) : lines;
+  const quotes = line?.evidence.filter((e) => e.type === 'observation') ?? [];
+  const refs = line?.evidence.filter((e) => e.type !== 'observation' && e.type !== 'photo') ?? [];
+  const photoMeta = (id: string) => line?.evidence.find((e) => e.type === 'photo' && e.evidenceId === `photo-${id}`);
+
   return (
-    <div className="fm-split">
-      <div>
-        <h3>Field evidence</h3>
-        {field.length === 0 && <p className="fm-muted">None linked.</p>}
-        {field.map((e, i) =>
-          e.type === 'photo' ? (
-            <figure key={i} className="fm-ev-photo">
-              {e.evidenceId && photos.some((p) => `photo-${p.id}` === e.evidenceId) && <Thumb id={e.evidenceId.replace('photo-', '')} alt={e.label} />}
-              <figcaption>
-                {e.label} · EXIF {fmt(e.capturedAt)}
-              </figcaption>
-            </figure>
-          ) : (
-            <blockquote key={i} className="fm-quote">
-              “{e.quote}”
-              <footer>
-                {e.label} · {fmt(e.capturedAt)}
-              </footer>
-            </blockquote>
-          ),
+    <section className="fm-card" aria-labelledby="split-h">
+      <div className="fm-section-title">
+        <h2 id="split-h">Evidence split view</h2>
+        {photoId && (
+          <button className="fm-btn fm-btn--subtle" onClick={() => setPhotoId(null)}>
+            Show all lines
+          </button>
         )}
       </div>
-      <div>
-        <h3>Plan, permit and sequence</h3>
-        {refs.length === 0 && <p className="fm-muted">No plan or permit reference.</p>}
-        {refs.map((e, i) => (
-          <div key={i} className="fm-ref">
-            <strong>{e.label}</strong>
-            {e.quote && <blockquote className="fm-quote">“{e.quote}”</blockquote>}
-            {e.issueKey && (
-              <button className="fm-link" onClick={() => router.open(`/browse/${e.issueKey}`)}>
-                Open {e.issueKey}
-              </button>
-            )}
+      <div className="fm-split3">
+        <div className="fm-split-col" aria-label="Photos">
+          <h3>Photos</h3>
+          {photos.length === 0 && <p className="fm-muted">No photos attached.</p>}
+          <div className="fm-split-photos">
+            {photos.map((p) => {
+              const linked = linkedPhotos.has(p.id);
+              const meta = photoMeta(p.id);
+              return (
+                <button
+                  key={p.id}
+                  className={`fm-split-photo${linked ? ' is-linked' : ''}${photoId === p.id ? ' is-selected' : ''}`}
+                  aria-pressed={photoId === p.id}
+                  onClick={() => setPhotoId(photoId === p.id ? null : p.id)}
+                  aria-label={`${p.filename}: show the checklist lines that cite this photo`}
+                >
+                  <Thumb id={p.id} alt={p.filename} />
+                  <span className="fm-split-cap">
+                    {p.filename}
+                    {linked && <span className="fm-sr"> (linked to the selected line)</span>}
+                    {meta?.capturedAt ? <span className="fm-muted"> · EXIF {fmt(meta.capturedAt)}</span> : null}
+                  </span>
+                </button>
+              );
+            })}
           </div>
-        ))}
+        </div>
+
+        <div className="fm-split-col" aria-label="Checklist and conditions">
+          <h3>Checklist and conditions{photoId ? ' citing this photo' : ''}</h3>
+          {visibleLines.length === 0 && <p className="fm-muted">No line cites this photo.</p>}
+          <ul className="fm-split-lines">
+            {visibleLines.map((l) => (
+              <li key={l.id}>
+                <button className={`fm-split-line fm-line--${STATUS[l.status].cls}${lineId === l.id ? ' is-selected' : ''}`} aria-pressed={lineId === l.id} onClick={() => setLineId(l.id)}>
+                  <span className={`fm-badge fm-badge--${l.status === 'verified' ? 'pass' : l.status === 'conflict' ? 'fail' : 'needs_review'}`}>{STATUS[l.status].label}</span>
+                  <span className="fm-split-line-text">
+                    <span className="fm-kind">{KIND_LABEL[l.kind]}</span>
+                    {l.item}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="fm-split-col" aria-label="Evidence for the selected line" aria-live="polite">
+          <h3>Why</h3>
+          {!line ? (
+            <p className="fm-muted">Select a line.</p>
+          ) : (
+            <>
+              <p className="fm-reason">
+                <strong>{STATUS[line.status].label}:</strong> {line.rationale}
+              </p>
+              {quotes.map((e, i) => (
+                <blockquote key={i} className="fm-quote">
+                  “{e.quote}”
+                  <footer>
+                    {e.label} · {fmt(e.capturedAt)}
+                  </footer>
+                </blockquote>
+              ))}
+              {refs.map((e, i) => (
+                <div key={i} className="fm-ref">
+                  <strong>{e.type === 'plan' ? `Plan citation · ${e.sheetId}` : e.label}</strong>
+                  {e.quote && <blockquote className={`fm-quote${e.type === 'plan' ? ' fm-quote--plan' : ''}`}>“{e.quote}”</blockquote>}
+                  {e.issueKey && (
+                    <button className="fm-link" onClick={() => router.open(`/browse/${e.issueKey}`)}>
+                      Open {e.issueKey}
+                    </button>
+                  )}
+                </div>
+              ))}
+              {!quotes.length && !refs.length && !linkedPhotos.size && <p className="fm-muted">No evidence linked yet. Add a field note or photo, then regenerate.</p>}
+            </>
+          )}
+        </div>
       </div>
-    </div>
+      {report.report.dropped.length > 0 && (
+        <p className="fm-fine">
+          {report.report.dropped.length} unsupported link(s) were discarded because the quote was not found in its source.
+        </p>
+      )}
+    </section>
   );
 }
 

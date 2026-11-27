@@ -152,3 +152,5 @@ vite.config.ts.timestamp-*
 static/ui/build/
 .forge/
 *.local
+static/ui/src/dev/fixtures.json
+static/ui/src/dev/photos/

@@ -4,6 +4,7 @@ import { view } from '@forge/bridge';
 import { CodeReview } from '@shared/CodeReview';
 import { EvidenceReport } from '@shared/EvidenceReport';
 import { GraphContext } from '@shared/GraphContext';
+import { Skeleton, Tabs } from '@shared/ui';
 import '@shared/base.css';
 
 view.theme.enable().catch(() => undefined);
@@ -22,21 +23,22 @@ function Panel() {
       })
       .catch(() => setTab('code'));
   }, []);
-  if (!tab) return null;
+  if (!tab) return <Skeleton lines={3} label="Loading Foreman" />;
   return (
     <main className="fm-page fm-page--panel">
-      <div role="tablist" className="fm-tabs fm-tabs--main" aria-label="Foreman views">
-        <button role="tab" aria-selected={tab === 'evidence'} className={tab === 'evidence' ? 'is-active' : ''} onClick={() => setTab('evidence')}>
-          Field evidence &amp; report
-        </button>
-        <button role="tab" aria-selected={tab === 'code'} className={tab === 'code' ? 'is-active' : ''} onClick={() => setTab('code')}>
-          Code review
-        </button>
-        <button role="tab" aria-selected={tab === 'context'} className={tab === 'context' ? 'is-active' : ''} onClick={() => setTab('context')}>
-          Context
-        </button>
+      <Tabs<Tab>
+        label="Foreman views"
+        value={tab}
+        onChange={setTab}
+        tabs={[
+          { id: 'evidence', label: 'Field evidence & report' },
+          { id: 'code', label: 'Code review' },
+          { id: 'context', label: 'Context' },
+        ]}
+      />
+      <div role="tabpanel" className="fm-tabpanel">
+        {tab === 'evidence' ? <EvidenceReport /> : tab === 'context' ? <GraphContext /> : <CodeReview />}
       </div>
-      <div role="tabpanel">{tab === 'evidence' ? <EvidenceReport /> : tab === 'context' ? <GraphContext /> : <CodeReview />}</div>
     </main>
   );
 }

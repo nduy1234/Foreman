@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "vite build --mode command-center && vite build --mode issue-panel",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "preview:mock": "vite --mode dev"
   },
   "dependencies": {
     "@forge/bridge": "^7.3.0",

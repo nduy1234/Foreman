@@ -78,6 +78,8 @@ export async function buildSnapshot(projectKey: string, now = new Date()): Promi
       stage: str('stage'),
       statusCategory: i.fields.status.statusCategory.key,
       permitNo: str('permitNo'),
+      trade: str('trade'),
+      level: str('level'),
       scheduledFor: str('scheduledFor') ?? (i.fields.issuetype.name === 'Inspection' ? (i.fields.duedate ?? null) : null),
       submittedOn: str('submittedOn'),
       expiresOn: str('expiresOn'),

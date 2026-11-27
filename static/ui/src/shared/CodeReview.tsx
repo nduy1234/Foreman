@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { router } from '@forge/bridge';
 import { AuditRow, call, Job, waitForJob } from './api';
+import { EmptyState, ErrorState, Skeleton } from './ui';
 
 type Status = 'pass' | 'fail' | 'needs_review';
 type State = 'open' | 'dismissed' | 'approved' | 'ticketed';
@@ -154,17 +155,7 @@ export function CodeReview() {
     return [...list].sort((a, b) => order[a.status] - order[b.status] || sev[a.severity] - sev[b.severity]);
   }, [ctx, filter]);
 
-  if (!ctx) {
-    return error ? (
-      <div role="alert" className="fm-banner fm-banner--error">
-        {error}
-      </div>
-    ) : (
-      <p className="fm-muted" aria-busy="true">
-        Loading code review…
-      </p>
-    );
-  }
+  if (!ctx) return error ? <ErrorState message={error} onRetry={load} /> : <Skeleton lines={5} label="Loading code review" />;
 
   const running = job && (job.state === 'queued' || job.state === 'running');
 
@@ -198,7 +189,7 @@ export function CodeReview() {
       {ctx.meta && (
         <section className="fm-card" aria-labelledby="sheets-h">
           <h2 id="sheets-h">Plan sheets</h2>
-          {ctx.sheets.length === 0 && <p className="fm-muted">No plan sheets yet. Paste sheet notes or import a PDF attached to this work item.</p>}
+          {ctx.sheets.length === 0 && <EmptyState title="No plan sheets yet">Paste sheet notes or import a text PDF attached to this work item.</EmptyState>}
           <fieldset className="fm-sheets" disabled={!!running}>
             <legend className="fm-sr">Sheets to review</legend>
             {ctx.sheets.map((s) => (

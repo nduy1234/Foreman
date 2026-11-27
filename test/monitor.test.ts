@@ -129,7 +129,7 @@ describe('monitor finds every planted problem in the demo project', () => {
     expect(r.issueRisk.find((x) => x.issueKey === 'PI1')!.score).toBe(0);
     expect(r.project.score).toBeGreaterThan(40);
     expect(r.project.band).not.toBe('low');
-    expect(r.project.why).toMatch(/open problem\(s\)/);
+    expect(r.project.why).toMatch(/^8 open problems, \d+ of them critical or high/);
   });
 });
 

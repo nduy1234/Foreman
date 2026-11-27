@@ -14,5 +14,12 @@ export default defineConfig(({ mode }) => ({
     outDir: resolve(import.meta.dirname, 'build', mode),
     emptyOutDir: true,
   },
-  resolve: { alias: { '@shared': resolve(import.meta.dirname, 'src/shared') } },
+  resolve: {
+    alias: {
+      '@shared': resolve(import.meta.dirname, 'src/shared'),
+      // Local preview harness: `vite --mode dev` swaps the Forge bridge for fixtures.
+      ...(mode === 'dev' ? { '@forge/bridge': resolve(import.meta.dirname, 'src/dev/mockBridge.ts') } : {}),
+    },
+  },
+  server: { port: 5199, strictPort: true },
 }));

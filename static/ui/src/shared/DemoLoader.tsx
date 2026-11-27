@@ -31,7 +31,8 @@ async function commandCenterPath(projectKey: string): Promise<string> {
   return `/jira/software/projects/${projectKey}/list`;
 }
 
-export function DemoLoader({ currentProjectKey }: { currentProjectKey: string | null }) {
+/** `compact`: used inside the onboarding checklist (no own heading; steps appear once loading starts). */
+export function DemoLoader({ currentProjectKey, compact = false }: { currentProjectKey: string | null; compact?: boolean }) {
   const [status, setStatus] = useState<DemoStatus | null>(null);
   const [running, setRunning] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -100,9 +101,9 @@ export function DemoLoader({ currentProjectKey }: { currentProjectKey: string | 
   const onDemoProject = currentProjectKey === status.projectKey;
 
   return (
-    <section className="fm-card" aria-labelledby="demo-h">
-      <h2 id="demo-h">{status.loaded ? 'Demo project loaded' : 'Get started: load the demo project'}</h2>
-      {!status.loaded && (
+    <section className={compact ? 'fm-demo-compact' : 'fm-demo'} aria-label="Demo project">
+      {!compact && <p className="fm-lede">{status.loaded ? `Riverside Commons (${status.projectKey}) is loaded with ${status.issueCount} work items.` : ''}</p>}
+      {!status.loaded && !compact && (
         <p className="fm-muted">
           Creates <strong>Riverside Commons</strong> ({status.projectKey}), a 5-story mixed-use project with 4 permits, 8 inspections, RFIs,
           punch items, plan sheets and field evidence, including a few planted problems for Foreman to find. Needs Jira admin. Takes about a
@@ -110,16 +111,21 @@ export function DemoLoader({ currentProjectKey }: { currentProjectKey: string | 
         </p>
       )}
 
-      <ol className="fm-steps" aria-label="Demo setup steps">
-        {status.steps.map((s) => (
-          <li key={s.id} className={s.done ? 'is-done' : ''}>
-            <span aria-hidden="true">{s.done ? '✓' : '○'}</span> {s.label}
-          </li>
-        ))}
-      </ol>
-      <div className="fm-progress" role="progressbar" aria-valuemin={0} aria-valuemax={status.steps.length} aria-valuenow={doneCount}>
-        <div style={{ width: `${(doneCount / status.steps.length) * 100}%` }} />
-      </div>
+      {(running || (doneCount > 0 && !status.loaded)) && (
+        <>
+          <ol className="fm-steps" aria-label="Demo setup steps">
+            {status.steps.map((s) => (
+              <li key={s.id} className={s.done ? 'is-done' : ''}>
+                <span aria-hidden="true">{s.done ? '✓' : '○'}</span> {s.label}
+                <span className="fm-sr">{s.done ? ' (done)' : ''}</span>
+              </li>
+            ))}
+          </ol>
+          <div className="fm-progress" role="progressbar" aria-label="Demo setup progress" aria-valuemin={0} aria-valuemax={status.steps.length} aria-valuenow={doneCount}>
+            <div style={{ width: `${(doneCount / status.steps.length) * 100}%` }} />
+          </div>
+        </>
+      )}
 
       {message && (
         <p className="fm-muted" aria-live="polite">

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { router } from '@forge/bridge';
 import { call } from './api';
+import { EmptyState, ErrorState, fmtDate, fmtDateTime, Skeleton } from './ui';
 
 interface Graph {
   available: boolean;
@@ -62,7 +63,7 @@ export function GraphContext() {
     }
   };
 
-  if (!data) return <p className="fm-muted">{error ?? 'Loading Teamwork Graph context…'}</p>;
+  if (!data) return error ? <ErrorState message={error} onRetry={load} /> : <Skeleton lines={5} label="Loading Teamwork Graph context" />;
   const g = data.graph;
   const empty = !g.decisions.length && !g.people.length && !g.docs.length && !g.similar.length;
 
@@ -97,10 +98,10 @@ export function GraphContext() {
         </div>
         {!g.available && <p className="fm-muted">{g.reason ?? 'Teamwork Graph did not answer.'} An org admin must grant the Teamwork Graph scopes for this app.</p>}
         {g.available && empty && (
-          <p className="fm-muted">
-            Nothing related found yet. New comments and pages take a few minutes to reach the graph.
+          <EmptyState title="Nothing related in the graph yet">
+            New comments and pages take a few minutes to reach Teamwork Graph.
             {!data.demoContextSeeded && ' For the demo, add decision records and spec pages below.'}
-          </p>
+          </EmptyState>
         )}
 
         {g.decisions.length > 0 && (
@@ -113,7 +114,7 @@ export function GraphContext() {
                   <button className="fm-link" onClick={() => router.open(`/browse/${d.issueKey}`)}>
                     {d.issueKey}
                   </button>
-                  {d.at ? <span className="fm-muted"> · {d.at.slice(0, 10)}</span> : null}
+                  {d.at ? <span className="fm-muted"> · {fmtDate(d.at)}</span> : null}
                   <div className="fm-excerpt">{d.text}</div>
                 </li>
               ))}
@@ -171,12 +172,12 @@ export function GraphContext() {
             <h3 className="fm-h3">City permit portal records</h3>
             <p className="fm-fine">
               Ingested into Teamwork Graph by the "City permit portal (demo)" connector{' '}
-              {g.connector.connected ? `(last sync ${g.connector.lastSync ? new Date(g.connector.lastSync).toLocaleString() : 'pending'}, ${g.connector.accepted} records)` : '(not connected yet; an admin connects it in Atlassian Administration > Connected apps)'}.
+              {g.connector.connected ? `(last sync ${g.connector.lastSync ? fmtDateTime(g.connector.lastSync) : 'pending'}, ${g.connector.accepted} records)` : '(not connected yet; an admin connects it in Atlassian Administration > Connected apps)'}.
             </p>
             <ul className="fm-ctx-list">
               {g.portal.map((r) => (
                 <li key={r.recordId}>
-                  <strong>{r.recordId}</strong> {r.title} <span className="fm-muted">· {r.date} · {r.official}</span>
+                  <strong>{r.recordId}</strong> {r.title} <span className="fm-muted">· {fmtDate(r.date)} · {r.official}</span>
                   <div className="fm-excerpt">
                     {r.status}. {r.detail}
                     {r.project !== 'Riverside Commons' ? ` (precedent from ${r.project})` : ''}

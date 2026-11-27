@@ -48,7 +48,7 @@ export function Diagnostics({ title, subtitle, embedded }: { title?: string; sub
       )}
 
       <section className="fm-card" aria-labelledby="status-h">
-        <h2 id="status-h">Connection</h2>
+        <h2 id="status-h">Health check</h2>
         {status ? (
           <dl className="fm-dl">
             <dt>App version</dt>
@@ -62,7 +62,7 @@ export function Diagnostics({ title, subtitle, embedded }: { title?: string; sub
           <p className="fm-muted">Connecting…</p>
         )}
         <button className="fm-btn" onClick={runPing} disabled={busy}>
-          {busy ? 'Running background job…' : 'Run background job check'}
+          {busy ? 'Testing background processing…' : 'Test background processing'}
         </button>
         {job && (
           <p className="fm-muted" aria-live="polite">
@@ -72,7 +72,7 @@ export function Diagnostics({ title, subtitle, embedded }: { title?: string; sub
       </section>
 
       <section className="fm-card" aria-labelledby="audit-h">
-        <h2 id="audit-h">Audit trail (latest)</h2>
+        <h2 id="audit-h">Recent activity (audit log)</h2>
         {audit.length === 0 ? (
           <p className="fm-muted">No activity yet.</p>
         ) : (

@@ -132,6 +132,17 @@ human-approved proposals.
 - Inspection stage changes go through `src/services/issueStage.ts#setStage`; only inspector
   sign-off (`reports.signOff`) may set `Passed`.
 
+### UI and local preview (Prompt 8)
+- Shared accessible primitives in `static/ui/src/shared/ui.tsx` (Skeleton, ErrorState with friendly
+  messages, EmptyState, Lozenge, WAI-ARIA Tabs with arrow keys). One token-based stylesheet
+  `shared/base.css` (ds-* CSS vars with light fallbacks); status is never colour-only.
+- Command Center = `CommandCenter.tsx`: header + risk gauge, onboarding checklist (KVS-dismissable),
+  tabs Overview (timeline with forecast critical path, risk heatmap) / Approval queue / Problems /
+  Digest / Settings. Timeline + heatmap data from `src/services/visuals.ts` (pure, tested).
+- Local preview without Jira: `npx tsx scripts/ui-fixtures.ts` (runs the real engines on the demo
+  dataset) then `npm --prefix static/ui run preview:mock` (port 5199; mock `@forge/bridge`).
+  Scenarios via URL hash: #cc, #cc-new, #cc-error, #panel-6, #panel-9, #panel-slow.
+
 ### Teamwork Graph (Prompt 7)
 - Consume (asUser only, curated queries, no registration): `jiraWorkItemComments`, `objects(ids)`,
   `atlassianUserContent`, `jiraSpaceWorkItems` in `src/services/twg/context.ts`. Schema SDL is public at
