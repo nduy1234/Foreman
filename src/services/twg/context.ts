@@ -1,5 +1,6 @@
 import api from '@forge/api';
 import { kvs } from '@forge/kvs';
+import { HttpError, withRetry } from '../../lib/retry';
 import { portalRecords } from '../../seed/cityPortal';
 import { getConnection } from './connector';
 
@@ -83,7 +84,14 @@ export const projectAri = (cloudId: string, projectId: string) => `ari:cloud:jir
 // ---------------- GraphQL ----------------
 
 async function gql<T>(query: string, variables: Record<string, unknown>): Promise<T> {
-  const res = await (api.asUser() as unknown as { requestTeamworkGraph: (q: string, v: unknown) => Promise<Response> }).requestTeamworkGraph(query, variables);
+  const res = await withRetry(
+    async () => {
+      const r = await (api.asUser() as unknown as { requestTeamworkGraph: (q: string, v: unknown) => Promise<Response> }).requestTeamworkGraph(query, variables);
+      if (r.status === 429 || r.status >= 500) throw new HttpError(`Teamwork Graph ${r.status}`, r.status);
+      return r;
+    },
+    { retries: 2, baseDelayMs: 400 },
+  );
   const json = (await res.json()) as { data?: T; errors?: { message: string }[] };
   if (json.errors?.length && !json.data) throw new Error(`Teamwork Graph: ${json.errors[0].message}`);
   return (json.data ?? {}) as T;
@@ -99,7 +107,7 @@ const ITEMS = `query foreman_items($ids: [ID!]!) {
 }`;
 const USER_CONTENT = `query foreman_userContent($userId: ID!) {
   atlassianUserContent(userId: $userId, roles: [CREATED], since: "P365D", first: 25) {
-    edges { node { __typename ... on ConfluencePage { title webUrl } ... on ConfluenceBlogPost { title webUrl } } }
+    edges { node { __typename ... on ConfluencePage { title webUrl } } }
   }
 }`;
 const SPACE_ITEMS = `query foreman_spaceItems($spaceAri: ID!) {
@@ -239,7 +247,7 @@ export async function buildGraphContext(focus: FocusIssue, opts: { cloudId?: str
         gql<{ atlassianUserContent?: { edges: { node: { __typename: string; title?: string; webUrl?: string } }[] } }>(USER_CONTENT, { userId: p.id })
           .then((d) =>
             (d.atlassianUserContent?.edges ?? [])
-              .filter((e) => e.node.__typename === 'ConfluencePage' || e.node.__typename === 'ConfluenceBlogPost')
+              .filter((e) => e.node.__typename === 'ConfluencePage')
               .map((e) => ({ title: e.node.title ?? '', url: e.node.webUrl ?? null, owner: p.name })),
           )
           .catch(() => []),

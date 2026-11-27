@@ -1,4 +1,5 @@
 import Resolver from '@forge/resolver';
+import { isConsentError, userMessage } from '../lib/errors';
 import { registerEvidenceResolvers } from './evidence';
 import { registerMonitorResolvers } from './monitor';
 import { registerContextResolvers } from './context';
@@ -19,11 +20,22 @@ import { DEMO_STEPS, DemoStepId, demoStatus, resetDemo, runDemoStep } from '../s
 
 const resolver = new Resolver();
 
-/** Forge's user-consent error must propagate so the platform can show "Allow access". */
-function isConsentError(err: unknown): boolean {
-  const e = err as { code?: string; name?: string };
-  return e?.code === 'NEEDS_AUTHENTICATION_ERR' || e?.name === 'NeedsAuthenticationError';
+// Every resolver: keep Forge's consent flow, turn everything else into a readable message.
+{
+  const define = resolver.define.bind(resolver);
+  type Fn = Parameters<typeof define>[1];
+  (resolver as { define: typeof define }).define = (key: string, fn: Fn) =>
+    define(key, async (req) => {
+      try {
+        return await fn(req);
+      } catch (err) {
+        if (isConsentError(err)) throw err;
+        console.error(`resolver ${key} failed: ${err instanceof Error ? err.message.slice(0, 300) : String(err)}`);
+        throw new Error(userMessage(err));
+      }
+    });
 }
+
 
 type Ctx = { accountId?: string; extension?: { project?: { key?: string }; issue?: { key?: string } } };
 

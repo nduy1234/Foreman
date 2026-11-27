@@ -185,7 +185,7 @@ heatmap (keep table) → MCP external-client demo (module stays).
 | R10 | Seeder > 25 s | Certain / Low | Seed runs as async job with progress polling |
 | R11 | Local Node v25 vs Forge CLI | Med / Low | Install Node 24 LTS |
 | R12 | Only one bonus prize per submission | Certain / Low | Lead with Best Agents in write-up (D6) |
-| R13 | Jira + Confluence (multi-app) Forge apps can only be listed on Marketplace as **paid** apps | Certain / Med | Confluence is optional (Jira required); report publishing degrades to Jira-only. Decide before Prompt 9: keep Confluence + paid listing, or drop Confluence for a free listing |
+| R13 | Jira + Confluence (multi-app) Forge apps can only be listed on Marketplace as **paid** apps | Certain / Med | Confluence is optional (Jira required); report publishing degrades to Jira-only. Install link works regardless (hackathon). Listing decision deferred to after judging: paid listing, or drop Confluence for a free one (see docs/marketplace/DEVELOPER_CONSOLE_STEPS.md §4) |
 | R14 | Forge LLM is text-only: photo content is not read | Certain / Med | Photos used for EXIF time/GPS and corroboration; VisionProvider hook for opt-in BYOK (costs RoA) |
 
 ## 8. Manual steps for you (before Prompt 1)

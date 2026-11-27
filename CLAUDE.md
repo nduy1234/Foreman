@@ -132,6 +132,13 @@ human-approved proposals.
 - Inspection stage changes go through `src/services/issueStage.ts#setStage`; only inspector
   sign-off (`reports.signOff`) may set `Passed`.
 
+### Hardening and shipping (Prompt 9)
+- Errors: `src/lib/errors.ts`. Every resolver is wrapped in `resolvers/index.ts`: consent errors propagate, everything else is rethrown via `userMessage()`. The jobs consumer returns `InvocationError` for 429/5xx/timeouts (60s·n / 20s·n, max 2 retries) and sets the job back to queued.
+- TWG `gql()` retries 429/5xx (withRetry 2×). Scopes `read:graph:blogpost:confluence` and `read:graph:work-item:external` were removed (unused). `manage:jira-project` stays, because PUT project properties needs it.
+- Production is deployed (2.1.0, Runs on Atlassian). Prod and dev can't both be installed on the same site, so verify prod on a fresh site.
+- Install link: Developer Console → Distribution → Sharing, Jira only. Never add `licensing` before judging, because it kills the link. Steps: `docs/marketplace/DEVELOPER_CONSOLE_STEPS.md`. QA: `docs/QA_CHECKLIST.md`.
+- Before a public listing: Personal Data Reporting for stored account IDs; R13 paid-listing decision.
+
 ### UI and local preview (Prompt 8)
 - Shared accessible primitives in `static/ui/src/shared/ui.tsx` (Skeleton, ErrorState with friendly
   messages, EmptyState, Lozenge, WAI-ARIA Tabs with arrow keys). One token-based stylesheet

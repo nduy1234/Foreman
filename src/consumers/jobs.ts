@@ -1,4 +1,5 @@
-import type { AsyncEvent } from '@forge/events';
+import { InvocationError, InvocationErrorCode, type AsyncEvent } from '@forge/events';
+import { classifyJobError } from '../lib/errors';
 import { audit } from '../lib/audit';
 import { updateJob } from '../lib/jobs';
 import { JobEventBody } from '../lib/schemas';
@@ -51,6 +52,13 @@ export async function handler(event: AsyncEvent) {
     await audit({ actorAccountId: null, actorKind: 'system', action: 'job.done', target: `job:${body.jobId}`, after: { kind: body.kind } });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    const retryCount = event.retryContext?.retryCount ?? 0;
+    const decision = classifyJobError(err, retryCount);
+    if (decision.retry) {
+      console.warn(`job ${body.jobId} (${body.kind}) transient failure, retry ${retryCount + 1} in ${decision.afterSeconds}s: ${message}`);
+      await updateJob(body.jobId, { state: 'queued', message: `Temporary problem; retrying in ${decision.afterSeconds}s (attempt ${retryCount + 2} of 3)` });
+      return new InvocationError({ retryAfter: decision.afterSeconds, retryReason: InvocationErrorCode[decision.reason] });
+    }
     console.error(`job ${body.jobId} (${body.kind}) failed: ${message}`);
     await updateJob(body.jobId, { state: 'failed', error: message });
     await audit({ actorAccountId: null, actorKind: 'system', action: 'job.failed', target: `job:${body.jobId}`, after: { kind: body.kind, error: message } });
